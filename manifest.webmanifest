@@ -1,0 +1,11 @@
+{
+  "name": "대칭으로 보는 당구 — 2026 포켓볼",
+  "short_name": "당구 시뮬레이터",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#10161c",
+  "theme_color": "#10161c",
+  "lang": "ko",
+  "icons": []
+}
