@@ -51,8 +51,22 @@
     App.screen = name;
     App.mode = App.modes[name] || null;
     if (App.mode) { App.mode.enter(); App.view = computeView(App.mode.worldRect()); }
+    document.getElementById('help').classList.remove('active');
+    if (App.mode && !helpSeen[name]) App.showHelp(name);
     App.lastInput = performance.now();
   };
+  /* ---------- 하는 법 안내 ---------- */
+  const helpSeen = {};
+  App.showHelp = function (name) {
+    const modal = document.getElementById('help');
+    modal.querySelectorAll('.help-page').forEach(p => p.classList.toggle('active', p.dataset.for === name));
+    modal.classList.add('active');
+    helpSeen[name] = true;
+  };
+  document.querySelectorAll('[data-help]').forEach(b => b.addEventListener('click', () => App.showHelp(b.dataset.help)));
+  document.getElementById('help-close').addEventListener('click', () => document.getElementById('help').classList.remove('active'));
+  App.resetHelp = () => { for (const k in helpSeen) delete helpSeen[k]; };
+
   App.msg = function (text, cls) {
     const el = document.querySelector('.screen.active .msg');
     if (!el) return;
@@ -108,7 +122,7 @@
       ctx.setTransform(App.dpr, 0, 0, App.dpr, 0, 0);
       ctx.clearRect(0, 0, App.cw, App.ch);
     }
-    if (App.screen !== 'home' && now - App.lastInput > IDLE_MS) App.go('home');
+    if (App.screen !== 'home' && now - App.lastInput > IDLE_MS) { App.resetHelp(); App.go('home'); }
     requestAnimationFrame(frame);
   }
 

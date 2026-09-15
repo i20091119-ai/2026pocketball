@@ -90,3 +90,17 @@ h1 { font-size: clamp(34px, 6vw, 66px); margin: 6px 0 26px; letter-spacing: -.02
   .timer { font-size: 13px; }
   input[type=range] { width: 120px; }
 }
+
+/* 하는 법 안내 */
+.help-btn { white-space: nowrap; }
+.help-box { max-width: 640px; text-align: left; }
+.help-box h2 { text-align: center; }
+.help-page { display: none; }
+.help-page.active { display: block; }
+.steps { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
+.steps li { display: flex; align-items: center; gap: 12px; font-size: 18px; line-height: 1.4; background: rgba(255,255,255,.06); border-radius: 14px; padding: 10px 14px; }
+.steps li > span { font-size: 30px; flex: 0 0 40px; text-align: center; }
+.steps b { color: var(--accent); }
+#help { pointer-events: auto; z-index: 20; }
+#help-close { display: block; margin: 0 auto; }
+@media (max-width: 760px) { .steps li { font-size: 15px; padding: 8px 10px; gap: 8px; } .steps li > span { font-size: 24px; flex-basis: 30px; } .help-btn { font-size: 13px; padding: 6px 8px; min-height: 40px; } }
