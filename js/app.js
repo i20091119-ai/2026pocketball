@@ -15,25 +15,7 @@
     lastInput: performance.now(),
   };
 
-  /* ---------- 소리 (첫 터치 후에만 생성) ---------- */
-  const Sound = {
-    ctx: null, on: true,
-    ensure() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { this.ctx = null; } } if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
-    tone(freq, dur, vol, type) {
-      if (!this.on || !this.ctx) return;
-      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-      o.type = type || 'sine'; o.frequency.value = freq;
-      g.gain.setValueAtTime(vol, this.ctx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
-      o.connect(g); g.connect(this.ctx.destination);
-      o.start(); o.stop(this.ctx.currentTime + dur);
-    },
-    click(v) { this.tone(900 + Math.random() * 300, 0.06, Math.min(0.25, 0.05 + v * 0.2), 'triangle'); },
-    cushion(v) { this.tone(220, 0.08, Math.min(0.2, 0.04 + v * 0.15), 'sine'); },
-    pocket() { this.tone(160, 0.25, 0.25, 'sine'); setTimeout(() => this.tone(120, 0.2, 0.2, 'sine'), 60); },
-    success() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.tone(f, 0.18, 0.18, 'triangle'), i * 90)); },
-    fail() { this.tone(200, 0.25, 0.15, 'sawtooth'); },
-  };
+  const Sound = global.Sound;
   App.sound = Sound;
 
   /* ---------- 뷰 ---------- */
@@ -78,6 +60,7 @@
     el.className = 'msg' + (cls ? ' ' + cls : '');
   };
   document.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { Sound.ensure(); App.go(b.dataset.go); }));
+  document.addEventListener('click', e => { if (e.target.closest('button')) { Sound.ensure(); Sound.tap(); } }, true);
   const soundBtn = document.getElementById('btn-sound');
   soundBtn.addEventListener('click', () => { Sound.on = !Sound.on; soundBtn.textContent = Sound.on ? '🔊 소리 켜짐' : '🔇 소리 꺼짐'; });
 

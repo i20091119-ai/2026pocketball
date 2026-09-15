@@ -119,6 +119,7 @@
   mode.shoot = function (dx, dy, speed) {
     mode.lastShot = { snap: mode.world.snapshot(), dx, dy, speed, from: { x: mode.yellow.x, y: mode.yellow.y } };
     mode.yellow.vx = dx * speed; mode.yellow.vy = dy * speed;
+    global.App.sound.shoot(speed / 420);
     if (mode.trail.length > 1) { mode.oldTrails.push(mode.trail); if (mode.oldTrails.length > 5) mode.oldTrails.shift(); }
     mode.shot = { dist: 0, hitRed: false, px: mode.yellow.x, py: mode.yellow.y };
     mode.trail = [{ x: mode.yellow.x, y: mode.yellow.y }]; mode.marks = []; mode.rays = null; mode.tick = 0;
@@ -155,6 +156,7 @@
     }
     mode.rays = { lines, progress: 0, fromFocus: mode.onFocusSnap({ x: ox, y: oy }) };
     mode.trail = []; mode.marks = [];
+    global.App.sound.whoosh();
     global.App.msg('✨ 60방향으로 동시에 쏘면…');
   };
 
@@ -179,6 +181,7 @@
   mode.onUp = function (p) {
     if (mode.drag) {
       const b = mode.drag.ball; mode.drag = null;
+      if (mode.onFocus(b) !== null) global.App.sound.snap();
       if (mode.onFocus(b) !== null) global.App.msg(b === mode.yellow ? '노란 공이 마법의 점 위에 올라갔어요 ✨' : '빨간 공이 마법의 점 위에 올라갔어요 ✨');
       else global.App.msg(b === mode.yellow ? '마법의 점이 아닌 곳이에요. 여기서 치면 어떻게 될까요?' : '빨간 공이 마법의 점을 벗어났어요');
       return;
@@ -208,8 +211,9 @@
     }
     if (mode.rays && mode.rays.progress < 1) {
       mode.rays.progress = Math.min(1, mode.rays.progress + dt / 2.6);
+      if (Math.random() < 0.25) global.App.sound.sparkle();
       if (mode.rays.progress >= 1) {
-        const [f1, f2] = mode.world.boundary.foci();
+        if (mode.rays.fromFocus) global.App.sound.star();
         global.App.msg(mode.rays.fromFocus ? '전부 다른 마법의 점을 지나갔어요! 어느 방향이든 똑같아요' : '마법의 점이 아니면 이렇게 흩어져요. 무늬가 보이나요?');
       }
     }

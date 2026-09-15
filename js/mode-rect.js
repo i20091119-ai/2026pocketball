@@ -114,6 +114,7 @@
   mode.shoot = function (dx, dy, speed) {
     mode.lastShot = { snap: mode.world.snapshot(), dx, dy, speed };
     mode.cue.vx = dx * speed; mode.cue.vy = dy * speed;
+    global.App.sound.shoot(speed / 420);
     mode.shot = { cushions: 0, hitRed: false, done: false };
     mode.trail = [{ x: mode.cue.x, y: mode.cue.y }]; mode.marks = [];
     mode.tick = 0;
@@ -131,7 +132,7 @@
     if (got === need) {
       mode.stars[need] = true; mode.updateTabs();
       global.App.msg(`성공! 쿠션 ${got}번 → 빨간 공 🎯  ★ 획득!`, 'good');
-      global.App.sound.success();
+      global.App.sound.success(); global.App.sound.star();
       mode.confetti = { t: 0, x: mode.cue.x, y: mode.cue.y };
     } else {
       global.App.msg(`빨간 공은 맞혔지만 쿠션은 ${got}번이었어요 (목표 ${need}번)`, 'bad');
@@ -163,8 +164,8 @@
     p.state = 'result';
     const d = Math.hypot(p.marker.x - p.actual.x, p.marker.y - p.actual.y);
     let text;
-    if (d <= 6) { text = '딱 맞았어요! 🎯 거울처럼 튀는 걸 알아냈네요'; global.App.sound.success(); }
-    else if (d <= 15) { text = '거의 맞았어요! 👍 조금만 더 거울처럼 생각해 봐요'; global.App.sound.success(); }
+    if (d <= 6) { text = '딱 맞았어요! 🎯 거울처럼 튀는 걸 알아냈네요'; global.App.sound.tada(); }
+    else if (d <= 15) { text = '거의 맞았어요! 👍 조금만 더 거울처럼 생각해 봐요'; global.App.sound.nice(); }
     else { text = '조금 빗나갔어요. 쿠션에 들어간 각도와 나온 각도를 비교해 보세요'; global.App.sound.fail(); }
     global.App.msg(text, d <= 15 ? 'good' : 'bad');
     mode.el.reaim.hidden = false; mode.el.reaim.textContent = '🔄 다시 하기';

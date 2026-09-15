@@ -128,12 +128,13 @@
 
   /* ---------- 턴 처리 ---------- */
   mode.objectBalls = () => mode.world.balls.filter(b => b !== mode.cue && !b.pocketed);
-  mode.switchTurn = function () { mode.turn = 1 - mode.turn; mode.turnLeft = mode.opts.turnSec; };
+  mode.switchTurn = function () { mode.turn = 1 - mode.turn; mode.turnLeft = mode.opts.turnSec; global.App.sound.turn(); };
   mode.resolveShot = function () {
     const s = mode.shot; mode.shot = null;
     const o = mode.opts, me = mode.players[mode.turn], other = mode.players[1 - mode.turn];
     let msg = '';
     if (s.cueFoul) {
+      global.App.sound.foul();
       mode.cue.pocketed = false; mode.cue.sink = 0; mode.cue.stop();
       mode.placeCue();
       mode.ballInHand = true;
@@ -141,7 +142,7 @@
     if (o.mode === 'score') {
       me.score += s.pocketed.length;
       if (s.cueFoul) { mode.switchTurn(); msg = `흰 공이 빠졌어요! ${P_NAME[mode.turn]}, 흰 공을 원하는 곳에 놓고 치세요`; }
-      else if (s.pocketed.length) msg = `${s.pocketed.length}개 넣었어요! ${P_NAME[mode.turn]} 한 번 더`;
+      else if (s.pocketed.length) { msg = `${s.pocketed.length}개 넣었어요! ${P_NAME[mode.turn]} 한 번 더`; global.App.sound.nice(); }
       else { mode.switchTurn(); msg = `${P_NAME[mode.turn]} 차례예요`; }
       if (!mode.objectBalls().length) return mode.endGame();
     } else {
@@ -162,7 +163,7 @@
       }
       const mine = me.group ? others.some(b => (b.number < 8) === (me.group === 'solid')) : others.length > 0;
       if (s.cueFoul) { mode.switchTurn(); msg = `흰 공이 빠졌어요! ${P_NAME[mode.turn]}, 흰 공을 원하는 곳에 놓고 치세요`; }
-      else if (mine) msg += `${P_NAME[mode.turn]} 한 번 더!`;
+      else if (mine) { msg += `${P_NAME[mode.turn]} 한 번 더!`; global.App.sound.nice(); }
       else { mode.switchTurn(); msg += `${P_NAME[mode.turn]} 차례예요`; }
       const cur = mode.players[mode.turn];
       if (cur.group && mode.remaining(cur.group) === 0) msg += ' — 이제 8번 공을 넣으면 승리!';
@@ -192,7 +193,7 @@
     if (mode.opts.mode === 'score') text += `\n🔵 ${p[0].score} : ${p[1].score} 🔴`;
     mode.el.overText.textContent = text;
     mode.el.over.classList.add('active');
-    global.App.sound.success();
+    global.App.sound.win();
   };
 
   /* ---------- 입력 ---------- */
@@ -216,6 +217,7 @@
     mode.aim = null;
     if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
     mode.cue.vx = a.dx * speedFromPower(a.power); mode.cue.vy = a.dy * speedFromPower(a.power);
+    global.App.sound.shoot(a.power);
     mode.ballInHand = false;
     mode.shot = { pocketed: [], cueFoul: false, contact: false };
     global.App.msg('');
@@ -233,7 +235,9 @@
     const o = mode.opts;
     if (o.gameSec) { mode.gameLeft -= dt; if (mode.gameLeft <= 0) { mode.gameLeft = 0; return mode.endGame(); } }
     if (o.turnSec && !moving && !mode.shot) {
+      const before = Math.ceil(mode.turnLeft);
       mode.turnLeft -= dt;
+      if (mode.turnLeft > 0 && mode.turnLeft <= 5 && Math.ceil(mode.turnLeft) !== before) global.App.sound.tick();
       if (mode.turnLeft <= 0) { mode.switchTurn(); global.App.msg(`시간 초과! ${P_NAME[mode.turn]} 차례예요`); }
     }
     if ((mode.tick = (mode.tick || 0) + 1) % 12 === 0) mode.updateHud();
