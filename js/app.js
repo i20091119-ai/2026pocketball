@@ -52,7 +52,7 @@
     App.mode = App.modes[name] || null;
     if (App.mode) { App.mode.enter(); App.view = computeView(App.mode.worldRect()); }
     document.getElementById('help').classList.remove('active');
-    if (App.mode && !helpSeen[name]) App.showHelp(name);
+    if (App.mode && !helpSeen[name] && App.autoHelp !== false) App.showHelp(name);
     App.lastInput = performance.now();
   };
   /* ---------- 하는 법 안내 ---------- */
