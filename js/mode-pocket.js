@@ -21,14 +21,13 @@
 
   mode.init = function () {
     const world = new World(new RectBoundary(W, H));
-    world.friction = 0.32; world.decel = 8;
     const cr = BR * 2.2, sr = BR * 1.7;
     world.pockets = [
       { x: 0, y: 0, r: cr }, { x: W, y: 0, r: cr }, { x: 0, y: H, r: cr }, { x: W, y: H, r: cr },
       { x: W / 2, y: -1.5, r: sr }, { x: W / 2, y: H + 1.5, r: sr },
     ];
-    world.onCushion = (b) => global.App.sound.cushion(b.speed / 340);
-    world.onBallHit = (a, b) => { global.App.sound.click(Math.max(a.speed, b.speed) / 340); if (mode.shot) mode.shot.contact = true; };
+    world.onCushion = (b) => global.App.sound.cushion(b.speed / 420);
+    world.onBallHit = (a, b) => { global.App.sound.click(Math.max(a.speed, b.speed) / 420); if (mode.shot) mode.shot.contact = true; };
     world.onPocket = (b) => {
       global.App.sound.pocket();
       if (!mode.shot) return;

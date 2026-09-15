@@ -151,8 +151,8 @@
       this.pockets = [];              // {x, y, r}
       this.cushionRestitution = 0.9;
       this.ballRestitution = 0.95;
-      this.friction = 0.35;           // 지수 감쇠(1/s)
-      this.decel = 8;                 // 선형 감속(단위/s²)
+      this.friction = 0.45;           // 지수 감쇠(1/s) — 최대 세기로 약 6.5초, 약 790 단위 이동
+      this.decel = 10;                // 선형 감속(단위/s²)
       this.stopSpeed = 1.5;
       this.onCushion = null;          // (ball, hit)
       this.onBallHit = null;          // (a, b)
@@ -237,7 +237,7 @@
   }
 
   /* 조준 세기 → 발사 속도 */
-  const MIN_SPEED = 80, MAX_SPEED = 340;
+  const MIN_SPEED = 100, MAX_SPEED = 420;
   function speedFromPower(p) { return MIN_SPEED + Math.max(0, Math.min(1, p)) * (MAX_SPEED - MIN_SPEED); }
 
   global.Physics = { Ball, RectBoundary, EllipseBoundary, World, speedFromPower, MIN_SPEED, MAX_SPEED };

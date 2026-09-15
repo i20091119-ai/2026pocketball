@@ -26,7 +26,6 @@
 
   mode.init = function () {
     const world = new World(new RectBoundary(W, H));
-    world.friction = 0.3; world.decel = 7;
     mode.cue = new Ball({ id: 'cue', x: 50, y: 50, r: BR, color: '#ffffff' });
     mode.red = new Ball({ id: 'red', x: 150, y: 50, r: BR, color: '#e0362c' });
     world.balls = [mode.cue, mode.red];
@@ -35,7 +34,7 @@
       if (!mode.shot.hitRed) mode.shot.cushions++;
       mode.marks.push({ x: hit.x, y: hit.y, n: mode.shot.cushions });
       mode.trail.push({ x: hit.cx, y: hit.cy });
-      global.App.sound.cushion(b.speed / 340);
+      global.App.sound.cushion(b.speed / 420);
       if (mode.predict && mode.predict.state === 'shooting' && mode.shot.cushions === 2 && !mode.predict.actual) {
         mode.predict.actual = { x: hit.x, y: hit.y };
         mode.finishPredict();
@@ -43,7 +42,7 @@
     };
     world.onBallHit = (a, b) => {
       if (!mode.shot) return;
-      global.App.sound.click(Math.max(a.speed, b.speed) / 340);
+      global.App.sound.click(Math.max(a.speed, b.speed) / 420);
       if ((a === mode.cue || b === mode.cue) && !mode.shot.hitRed && !mode.predict) {
         mode.shot.hitRed = true;
         mode.trail.push({ x: mode.cue.x, y: mode.cue.y });
@@ -123,7 +122,7 @@
   mode.replay = function () {
     if (!mode.lastShot || mode.world.anyMoving()) return;
     mode.world.restore(mode.lastShot.snap);
-    mode.timeScale = 0.35;
+    mode.timeScale = 0.5;
     mode.shoot(mode.lastShot.dx, mode.lastShot.dy, mode.lastShot.speed);
     global.App.msg('🐢 천천히 다시 보기');
   };
@@ -139,6 +138,7 @@
       global.App.sound.fail();
     }
     mode.shot.done = true;
+    mode.timeScale = 1; // 다시 보기 중이었다면 명중 이후엔 정상 속도
   };
 
   /* ---------- 예측 놀이 ---------- */

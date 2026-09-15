@@ -20,7 +20,6 @@
 
   mode.init = function () {
     const world = new World(new EllipseBoundary(A, 60));
-    world.friction = 0.22; world.decel = 5;
     mode.yellow = new Ball({ id: 'yellow', x: 0, y: 0, r: BR, color: '#f5c518' });
     mode.red = new Ball({ id: 'red', x: 0, y: 0, r: BR, color: '#e0362c' });
     world.balls = [mode.yellow, mode.red];
@@ -30,13 +29,14 @@
         if (!s.hitRed) { s.dist += Math.hypot(hit.cx - s.px, hit.cy - s.py); s.px = hit.cx; s.py = hit.cy; }
         mode.marks.push(hit); mode.trail.push({ x: hit.cx, y: hit.cy });
       }
-      global.App.sound.cushion(b.speed / 340);
+      global.App.sound.cushion(b.speed / 420);
     };
     world.onBallHit = (a, b) => {
-      global.App.sound.click(Math.max(a.speed, b.speed) / 340);
+      global.App.sound.click(Math.max(a.speed, b.speed) / 420);
       if (mode.shot && !mode.shot.hitRed) {
         const s = mode.shot; s.dist += Math.hypot(mode.yellow.x - s.px, mode.yellow.y - s.py); s.px = mode.yellow.x; s.py = mode.yellow.y;
         mode.shot.hitRed = true;
+        mode.timeScale = 1; // 다시 보기 중이었다면 명중 이후엔 정상 속도
         mode.trail.push({ x: mode.yellow.x, y: mode.yellow.y });
         mode.recordDistance(mode.shot.dist);
       }
@@ -127,7 +127,7 @@
   mode.replay = function () {
     if (!mode.lastShot || mode.world.anyMoving()) return;
     mode.world.restore(mode.lastShot.snap);
-    mode.timeScale = 0.35;
+    mode.timeScale = 0.5;
     mode.shoot(mode.lastShot.dx, mode.lastShot.dy, mode.lastShot.speed);
     global.App.msg('🐢 천천히 다시 보기');
   };
