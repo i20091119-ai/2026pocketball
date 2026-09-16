@@ -19,11 +19,11 @@
 
 ## 웹 배포 (GitHub Pages)
 
-`.github/workflows/pages.yml`이 `main` 브랜치에 푸시될 때 자동 배포합니다.
+저장소의 **기본 브랜치에 푸시하면 GitHub Pages가 자동으로 배포**합니다 (Settings → Pages, "Deploy from a branch").
+빌드 과정이 없으므로 별도 워크플로는 필요 없습니다. 푸시 후 1분 안팎이면 반영됩니다.
 
-1. 저장소 **Settings → Pages → Source**를 **GitHub Actions**로 설정 (최초 1회)
-2. `main`에 푸시하거나 Actions 탭에서 워크플로를 수동 실행
-3. `https://<계정>.github.io/2026pocketball/` 에서 접속
+- 주소: https://i20091119-ai.github.io/2026pocketball/
+- 배포 상태: 저장소 Actions 탭의 "pages build and deployment"
 
 ## 구조
 
