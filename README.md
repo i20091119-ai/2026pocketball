@@ -25,6 +25,11 @@
 - 주소: https://i20091119-ai.github.io/2026pocketball/
 - 배포 상태: 저장소 Actions 탭의 "pages build and deployment"
 
+## 글꼴
+
+`assets/fonts/`에 Jua(제목·버튼)와 Gowun Dodum(본문)을 woff2로 포함해 인터넷 없이도 같은 모양으로 보입니다.
+두 글꼴 모두 SIL Open Font License(같은 폴더의 `OFL-*.txt`).
+
 ## 구조
 
 ```

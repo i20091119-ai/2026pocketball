@@ -1,3 +1,7 @@
+/* 글꼴은 저장소에 포함(오프라인 전시 PC용). SIL Open Font License — assets/fonts/OFL-*.txt */
+@font-face { font-family: "Jua"; src: url("../assets/fonts/Jua-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Gowun Dodum"; src: url("../assets/fonts/GowunDodum-Regular.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+
 /* 경남수학문화관 로고의 무지개 다각형 다섯 색을 기준으로 한 밝고 산뜻한 테마 */
 :root {
   --red: #e2231a; --orange: #f7941d; --green: #8dc63f; --blue: #0a8fd8; --purple: #8e44ad;
