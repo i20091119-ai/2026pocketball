@@ -30,6 +30,12 @@
 `assets/fonts/`에 Jua(제목·버튼)와 Gowun Dodum(본문)을 woff2로 포함해 인터넷 없이도 같은 모양으로 보입니다.
 두 글꼴 모두 SIL Open Font License(같은 폴더의 `OFL-*.txt`).
 
+## 효과음
+
+`assets/sounds/*.mp3` 17종은 `js/sound.js`의 레시피(Web Audio 합성)로 직접 제작했고,
+파일 열기·오프라인에서도 재생되도록 `js/sounds-data.js`에 base64로 내장되어 있다(합계 약 150 KB).
+샘플을 못 불러오면 같은 레시피로 즉석 합성한다. 홈 화면의 🔊 버튼으로 전체 끄기.
+
 ## 구조
 
 ```

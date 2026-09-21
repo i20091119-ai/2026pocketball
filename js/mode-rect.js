@@ -78,6 +78,7 @@
   mode.stopAll = function () { mode.world.balls.forEach(b => b.stop()); mode.shot = null; mode.aim = null; mode.drag = null; mode.timeScale = 1; };
 
   mode.setLevel = function (lv) {
+    clearTimeout(mode.rewardTimer); // 다른 단계로 넘어가면 예약된 축하 카드는 취소
     mode.stopAll();
     mode.level = lv === 'predict' ? 'predict' : Number(lv);
     mode.trail = []; mode.marks = [];
@@ -145,7 +146,7 @@
       global.App.msg(`성공! 쿠션 ${got}번 → 빨간 공 🎯  ★ 획득!`, 'good');
       global.App.sound.success(); global.App.sound.star();
       mode.confetti = { t: 0, parts: makeConfetti(mode.cue.x, mode.cue.y, isNew ? 140 : 50) };
-      if (isNew) setTimeout(() => mode.showReward(need), 900);
+      if (isNew) { clearTimeout(mode.rewardTimer); mode.rewardTimer = setTimeout(() => { if (mode.level === need) mode.showReward(need); }, 900); }
     } else {
       global.App.msg(`빨간 공은 맞혔지만 쿠션은 ${got}번이었어요 (목표 ${need}번)`, 'bad');
       global.App.sound.fail();
