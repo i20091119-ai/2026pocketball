@@ -53,8 +53,9 @@ input[type=range] { width: 170px; accent-color: var(--blue); }
 #screen-home.active { display: grid; }
 .home-inner { text-align: center; padding: 24px 24px 32px; max-width: 980px; width: 100%; position: relative; }
 .logo-wrap { display: flex; justify-content: center; margin-bottom: 6px; }
-.logo { max-width: min(420px, 80vw); height: auto; }
+.logo { max-width: min(520px, 84vw); height: auto; }
 .logo-fallback { width: min(460px, 86vw); height: auto; }
+.logo[hidden], .logo-fallback[hidden] { display: none; } /* 인라인 SVG는 hidden 속성을 무시하므로 CSS로 */
 .eyebrow { font-family: var(--head); color: var(--ink-soft); font-size: 17px; margin: 6px 0 0; }
 .title { font-family: var(--head); font-weight: 400; font-size: clamp(40px, 7vw, 76px); margin: 2px 0 6px; line-height: 1.15; color: var(--ink); }
 .rainbow { background: linear-gradient(90deg, var(--red), var(--orange), var(--green), var(--blue), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
