@@ -56,7 +56,10 @@
     mode.world = world;
 
     const $ = id => document.getElementById(id);
-    mode.el = { tabs: $('rect-tabs'), mirror: $('rect-mirror'), shuffle: $('rect-shuffle'), replay: $('rect-replay'), fire: $('rect-fire'), reaim: $('rect-reaim') };
+    mode.el = { tabs: $('rect-tabs'), mirror: $('rect-mirror'), shuffle: $('rect-shuffle'), replay: $('rect-replay'), fire: $('rect-fire'), reaim: $('rect-reaim'),
+      stars: $('rect-stars'), reward: $('rect-reward'), rewardIcon: $('reward-icon'), rewardTitle: $('reward-title'), rewardStars: $('reward-stars'), rewardSub: $('reward-sub'), rewardNext: $('reward-next'), rewardStay: $('reward-stay') };
+    mode.el.rewardStay.addEventListener('click', () => { mode.el.reward.classList.remove('active'); if (mode.starCount() === 3) { mode.stars = { 1: false, 2: false, 3: false }; mode.setLevel(1); } });
+    mode.el.rewardNext.addEventListener('click', () => { mode.el.reward.classList.remove('active'); mode.rewardNextAction(); });
     mode.el.tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => mode.setLevel(b.dataset.level)));
     mode.el.mirror.addEventListener('click', () => mode.setMirror(!mode.mirror));
     mode.el.shuffle.addEventListener('click', () => mode.shuffle());
@@ -66,7 +69,7 @@
   };
 
   mode.enter = function () {
-    mode.timeScale = 1;
+    mode.timeScale = 1; mode.el.reward.classList.remove('active');
     mode.setLevel(mode.level === 'predict' ? 1 : mode.level);
   };
   mode.leave = function () { mode.stopAll(); };
@@ -95,6 +98,7 @@
     mode.updateTabs();
   };
   mode.updateTabs = function () {
+    mode.el.stars.querySelectorAll('span').forEach(sp => { const on = !!mode.stars[Number(sp.dataset.star)]; sp.classList.toggle('on', on); sp.textContent = on ? '★' : '☆'; });
     mode.el.tabs.querySelectorAll('button[data-level]').forEach(b => {
       const lv = Number(b.dataset.level);
       if (lv) b.textContent = (mode.stars[lv] ? '★ ' : '☆ ') + lv + '쿠션';
@@ -136,16 +140,56 @@
   mode.judge = function () {
     const need = mode.level, got = mode.shot.cushions;
     if (got === need) {
+      const isNew = !mode.stars[need];
       mode.stars[need] = true; mode.updateTabs();
       global.App.msg(`성공! 쿠션 ${got}번 → 빨간 공 🎯  ★ 획득!`, 'good');
       global.App.sound.success(); global.App.sound.star();
-      mode.confetti = { t: 0, x: mode.cue.x, y: mode.cue.y };
+      mode.confetti = { t: 0, parts: makeConfetti(mode.cue.x, mode.cue.y, isNew ? 140 : 50) };
+      if (isNew) setTimeout(() => mode.showReward(need), 900);
     } else {
       global.App.msg(`빨간 공은 맞혔지만 쿠션은 ${got}번이었어요 (목표 ${need}번)`, 'bad');
       global.App.sound.fail();
     }
     mode.shot.done = true;
     mode.timeScale = 1; // 다시 보기 중이었다면 명중 이후엔 정상 속도
+  };
+
+  /* ---------- 별 보상 ---------- */
+  function makeConfetti(x, y, n) {
+    const parts = [];
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2, sp = 40 + Math.random() * 110;
+      parts.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, vr: (Math.random() - 0.5) * 12, rot: Math.random() * Math.PI, w: 2 + Math.random() * 2.5, h: 1.2 + Math.random() * 1.5, color: `hsl(${Math.floor(Math.random() * 360)},95%,62%)` });
+    }
+    return parts;
+  }
+  mode.starCount = () => [1, 2, 3].filter(l => mode.stars[l]).length;
+  mode.showReward = function (level) {
+    const el = mode.el, count = mode.starCount(), all = count === 3;
+    el.rewardStars.innerHTML = [1, 2, 3].map(l => mode.stars[l] ? '<b>★</b>' : '☆').join('');
+    el.reward.querySelector('.box').classList.toggle('master', all);
+    if (all) {
+      el.rewardIcon.textContent = '🏆';
+      el.rewardTitle.textContent = '당구 마스터!';
+      el.rewardSub.textContent = '별 세 개를 모두 모았어요!\n대칭의 원리로 3쿠션까지 성공한 진짜 고수예요.';
+      el.rewardNext.textContent = '🎯 예측 놀이 해보기';
+      el.rewardStay.textContent = '처음부터 다시';
+      mode.confetti = { t: 0, parts: makeConfetti(W / 2, H / 2, 260) };
+      global.App.sound.win();
+    } else {
+      el.rewardIcon.textContent = '⭐';
+      el.rewardTitle.textContent = `${level}쿠션 성공!`;
+      el.rewardSub.textContent = count === 1 ? '첫 번째 별이에요! 별 세 개를 모으면 당구 마스터!' : `별 ${count}개! 하나만 더 모으면 당구 마스터!`;
+      const next = [1, 2, 3].find(l => !mode.stars[l]);
+      el.rewardNext.textContent = next ? `다음 도전: ${next}쿠션 →` : '다음 도전 →';
+      el.rewardStay.textContent = '계속 연습';
+    }
+    el.reward.classList.add('active');
+  };
+  mode.rewardNextAction = function () {
+    if (mode.starCount() === 3) { mode.setLevel('predict'); return; }
+    const next = [1, 2, 3].find(l => !mode.stars[l]);
+    if (next) mode.setLevel(next);
   };
 
   /* ---------- 예측 놀이 ---------- */
@@ -251,7 +295,7 @@
         mode.shot = null; mode.timeScale = 1;
       }
     }
-    if (mode.confetti) { mode.confetti.t += dt; if (mode.confetti.t > 1.2) mode.confetti = null; }
+    if (mode.confetti) { const c = mode.confetti; c.t += dt; for (const p of c.parts) { p.vy += 120 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt; } if (c.t > 2.4) mode.confetti = null; }
   };
 
   /* ---------- 뷰 ---------- */
@@ -396,9 +440,8 @@
     }
     for (const b of world.balls) R.drawBall(ctx, b);
     if (mode.confetti) {
-      const c = mode.confetti, k = c.t / 1.2;
-      ctx.save(); ctx.globalAlpha = 1 - k;
-      for (let i = 0; i < 18; i++) { const a = i * Math.PI * 2 / 18, d = 8 + k * 40; ctx.fillStyle = `hsl(${i * 20},90%,60%)`; ctx.beginPath(); ctx.arc(c.x + Math.cos(a) * d, c.y + Math.sin(a) * d - k * 10, 2, 0, Math.PI * 2); ctx.fill(); }
+      const c = mode.confetti; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (c.t - 1.4) / 1);
+      for (const p of c.parts) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); }
       ctx.restore();
     }
   };
