@@ -23,7 +23,7 @@
     </div>
     <div class="home-inner">
       <div class="logo-wrap">
-        <img class="logo" src="assets/gnmc-logo.png" alt="경남수학문화관" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+        <img class="logo" data-admin-hold src="assets/gnmc-logo.png" alt="경남수학문화관" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
         <svg class="logo-fallback" hidden viewBox="0 0 660 120" role="img" aria-label="경남수학문화관">
           <polygon points="18,44 84,26 62,92" fill="#e2231a"/>
           <rect x="82" y="22" width="48" height="48" rx="4" fill="#f7941d" transform="rotate(14 106 46)"/>
@@ -59,7 +59,7 @@
   <!-- 네모 당구대 -->
   <section class="screen" id="screen-rect">
     <header class="bar top">
-      <button class="home-btn" data-go="home">⌂ 홈</button>
+      <button class="home-btn" data-go="home" data-admin-hold>⌂ 홈</button>
       <div class="msg"></div>
       <div class="stars" id="rect-stars" title="모은 별"><span data-star="1">☆</span><span data-star="2">☆</span><span data-star="3">☆</span></div>
       <button class="help-btn" data-help="rect">❓ 하는 법</button>
@@ -97,7 +97,7 @@
   <!-- 타원 당구대 -->
   <section class="screen" id="screen-ellipse">
     <header class="bar top">
-      <button class="home-btn" data-go="home">⌂ 홈</button>
+      <button class="home-btn" data-go="home" data-admin-hold>⌂ 홈</button>
       <div class="msg"></div>
       <button class="help-btn" data-help="ellipse">❓ 하는 법</button>
     </header>
@@ -116,7 +116,7 @@
   <!-- 포켓볼 대결 -->
   <section class="screen" id="screen-pocket">
     <header class="bar top">
-      <button class="home-btn" data-go="home">⌂ 홈</button>
+      <button class="home-btn" data-go="home" data-admin-hold>⌂ 홈</button>
       <div class="turn p1" id="pocket-turn"></div>
       <div class="msg"></div>
       <div class="score" id="pocket-score"></div>
@@ -165,6 +165,20 @@
       </div>
     </div>
   </section>
+
+  <!-- 관리자(길게 누르기 3초) -->
+  <div class="modal" id="admin">
+    <div class="box">
+      <h2>🔧 관리자</h2>
+      <p class="admin-hint">홈 버튼이나 로고를 3초간 길게 누르면 열려요.</p>
+      <div class="opt-row">
+        <button id="admin-exit" class="primary big">⏻ 전시 종료 (창 닫기)</button>
+        <button id="admin-home" class="big">⌂ 홈으로</button>
+        <button id="admin-cancel" class="big">닫기</button>
+      </div>
+      <p id="admin-fallback" class="admin-hint" hidden>창이 닫히지 않으면: 화면 <b>왼쪽 가장자리에서 안쪽으로 쓸어넘긴 뒤</b>(작업 보기) 이 창의 <b>✕</b>를 누르세요. 키보드가 있으면 <b>Alt + F4</b>.</p>
+    </div>
+  </div>
 
   <!-- 하는 법 안내 (공용) -->
   <div class="modal" id="help">

@@ -81,6 +81,23 @@
   document.getElementById('help-prev').addEventListener('click', () => { if (helpStep > 0) { helpStep--; renderHelpStep(); } });
   App.resetHelp = () => { for (const k in helpSeen) delete helpSeen[k]; };
 
+  /* ---------- 관리자: 길게 누르기(3초)로 열기, 전시 종료 ---------- */
+  const adminModal = document.getElementById('admin');
+  let holdTimer = null;
+  document.querySelectorAll('[data-admin-hold]').forEach(el => {
+    const start = e => { clearTimeout(holdTimer); holdTimer = setTimeout(() => { adminModal.classList.add('active'); document.getElementById('admin-fallback').hidden = true; }, 3000); };
+    const cancel = () => clearTimeout(holdTimer);
+    el.addEventListener('pointerdown', start);
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => el.addEventListener(t, cancel));
+    el.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  document.getElementById('admin-cancel').addEventListener('click', () => adminModal.classList.remove('active'));
+  document.getElementById('admin-home').addEventListener('click', () => { adminModal.classList.remove('active'); App.resetHelp(); App.go('home'); });
+  document.getElementById('admin-exit').addEventListener('click', () => {
+    window.close(); // 이 페이지는 이동 기록이 하나뿐이라 브라우저 규칙상 스크립트로 닫을 수 있다
+    setTimeout(() => { document.getElementById('admin-fallback').hidden = false; }, 400);
+  });
+
   App.msg = function (text, cls) {
     const el = document.querySelector('.screen.active .msg');
     if (!el) return;

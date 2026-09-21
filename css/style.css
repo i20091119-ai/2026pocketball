@@ -109,6 +109,9 @@ input[type=range] { width: 170px; accent-color: var(--blue); }
 
 /* 하는 법 안내 */
 #help { pointer-events: auto; z-index: 20; }
+#admin { pointer-events: auto; z-index: 30; }
+.admin-hint { color: var(--ink-soft); font-size: 15px; margin: 6px 0; }
+.logo { pointer-events: auto; }
 .help-box { max-width: 640px; text-align: left; }
 .help-box h2 { text-align: center; }
 .help-page { display: none; }
