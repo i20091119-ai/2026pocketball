@@ -182,8 +182,8 @@
     // 벽에 닿아 있는 공(반투명): 선이 벽 앞에서 꺾이는 이유 — 공의 중심 자국이기 때문
     if (o.ballR) {
       ctx.beginPath(); ctx.arc(px, py, o.ballR, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fill();
-      ctx.setLineDash([1.5, 1.5]); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 0.7; ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fill();
+      ctx.setLineDash([1.6, 1.4]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1; ctx.stroke(); ctx.setLineDash([]);
     }
     const label = (txt, x, y, color, size) => { ctx.font = `bold ${size || 5.5}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y); };
     // 두 초점으로 가는 보조선: 법선이 ∠F₁PF₂를 반으로 나눈다
