@@ -14,7 +14,7 @@
     opts: { mode: 'score', balls: 15, turnSec: 0, gameSec: 0, first: 0 },
     players: [], turn: 0, ballInHand: false,
     shot: null, aim: null, drag: null, downAt: 0,
-    aimLine: true, mirror: false,
+    aimLine: true,
     turnLeft: 0, gameLeft: 0,
     el: {},
   };
@@ -39,7 +39,7 @@
     mode.el = {
       setup: $('pocket-setup'), over: $('pocket-over'), overText: $('pocket-over-text'),
       turn: $('pocket-turn'), score: $('pocket-score'), timer: $('pocket-timer'),
-      aimBtn: $('pocket-aimline'), mirrorBtn: $('pocket-mirror'), newBtn: $('pocket-new'),
+      aimBtn: $('pocket-aimline'), newBtn: $('pocket-new'),
       start: $('pocket-start'), again: $('pocket-again'),
     };
     mode.el.setup.querySelectorAll('.seg').forEach(seg => {
@@ -53,7 +53,6 @@
     mode.el.again.addEventListener('click', () => { mode.el.over.classList.remove('active'); mode.showSetup(); });
     mode.el.newBtn.addEventListener('click', () => mode.showSetup());
     mode.el.aimBtn.addEventListener('click', () => mode.setAimLine(!mode.aimLine));
-    mode.el.mirrorBtn.addEventListener('click', () => { mode.mirror = !mode.mirror; mode.el.mirrorBtn.classList.toggle('on', mode.mirror); mode.el.mirrorBtn.textContent = mode.mirror ? '🪞 거울 끄기' : '🪞 거울 켜기'; });
   };
 
   mode.enter = function () { mode.timeScale = 1; if (mode.phase !== 'play') mode.showSetup(); };
@@ -245,24 +244,11 @@
     if ((mode.tick = (mode.tick || 0) + 1) % 12 === 0) mode.updateHud();
   };
 
-  mode.worldRect = function () {
-    const rail = 9;
-    if (mode.mirror) { const w = W - 2 * BR, h = H - 2 * BR; return { x: BR - w - rail - BR, y: BR - h - rail - BR, w: 3 * w + 2 * (rail + BR), h: 3 * h + 2 * (rail + BR) }; }
-    return { x: -rail, y: -rail, w: W + 2 * rail, h: H + 2 * rail };
-  };
+  mode.worldRect = function () { const rail = 9; return { x: -rail, y: -rail, w: W + 2 * rail, h: H + 2 * rail }; };
 
   /* ---------- 렌더 ---------- */
   mode.render = function (ctx, t) {
     const world = mode.world;
-    if (mode.mirror) {
-      const w = W - 2 * BR, h = H - 2 * BR;
-      for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
-        if (i === 0 && j === 0) continue;
-        ctx.save(); ctx.globalAlpha = 0.4; ctx.translate(i * w, j * h);
-        R.drawRectTable(ctx, W, H, { cloth: '#3a7a55', wood: '#6b4a2b', rail: 4, pockets: world.pockets });
-        ctx.restore();
-      }
-    }
     R.drawRectTable(ctx, W, H, { cloth: '#2c8a4a', pockets: world.pockets });
     // 조준선
     if (mode.aim && !world.anyMoving() && mode.phase === 'play') {
