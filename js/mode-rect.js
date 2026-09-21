@@ -32,7 +32,7 @@
     world.onCushion = (b, hit) => {
       if (b !== mode.cue || !mode.shot) return;
       if (!mode.shot.hitRed) mode.shot.cushions++;
-      mode.marks.push({ x: hit.x, y: hit.y, n: mode.shot.cushions });
+      mode.marks.push({ x: hit.x, y: hit.y, n: mode.shot.hitRed ? null : mode.shot.cushions }); // 빨간 공을 맞힌 뒤의 튕김은 숫자 없이
       mode.trail.push({ x: hit.cx, y: hit.cy });
       global.App.sound.cushion(b.speed / 420);
       if (mode.predict && mode.predict.state === 'shooting' && mode.shot.cushions === 2 && !mode.predict.actual) {
@@ -212,12 +212,13 @@
     mode.aim = null;
     if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
     if (mode.predict && mode.predict.state === 'aim') {
-      mode.predict.dir = { dx: a.dx, dy: a.dy };
+      mode.predict.dir = { dx: a.dx, dy: a.dy }; mode.lastDir = mode.predict.dir;
       mode.predict.state = 'predict';
       mode.el.reaim.hidden = false; mode.el.reaim.textContent = '↩ 방향 다시';
       global.App.msg('② 공이 두 번째로 쿠션에 닿을 곳을 찍어 보세요');
       return;
     }
+    mode.lastDir = { dx: a.dx, dy: a.dy };
     mode.shoot(a.dx, a.dy, speedFromPower(a.power));
   };
 
@@ -292,22 +293,17 @@
 
     // 지난 경로
     R.drawTrail(ctx, mode.trail, 'rgba(255,255,255,.85)', 1.2);
-    for (const m of mode.marks) { R.drawBurst(ctx, m.x, m.y, 4, '#ffe066'); R.drawText(ctx, String(m.n), m.x + (m.x < W / 2 ? 7 : -7), m.y + (m.y < H / 2 ? 7 : -7), 6, '#ffe066'); }
+    for (const m of mode.marks) { R.drawBurst(ctx, m.x, m.y, m.n == null ? 2.5 : 4, m.n == null ? 'rgba(255,224,102,.55)' : '#ffe066'); if (m.n != null) R.drawText(ctx, String(m.n), m.x + (m.x < W / 2 ? 7 : -7), m.y + (m.y < H / 2 ? 7 : -7), 6, '#ffe066'); }
 
     // 조준선
     if (mode.aim && !world.anyMoving()) {
       const a = global.App.aimFrom(mode.cue, mode.aim, W);
       if (a && a.d >= BR * 1.5) {
-        ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y);
         if (mode.mirror && L) {
           const len = (2 * L + 2) * W;
-          ctx.lineTo(mode.cue.x + a.dx * len, mode.cue.y + a.dy * len);
-        } else {
-          const hit = world.castRay(mode.cue, a.dx, a.dy);
-          if (hit) ctx.lineTo(hit.x, hit.y);
-        }
-        ctx.stroke(); ctx.restore();
+          ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y); ctx.lineTo(mode.cue.x + a.dx * len, mode.cue.y + a.dy * len); ctx.stroke(); ctx.restore();
+        } else R.drawAimLine(ctx, mode.cue, a.dx, a.dy, world.castRay(mode.cue, a.dx, a.dy));
         if (!mode.predict) {
           // 세기 표시
           const pw = a.power;
@@ -322,8 +318,7 @@
       if (p.dir && (p.state === 'predict' || p.state === 'shooting' || p.state === 'result')) {
         const hit = world.castRay(mode.cue, p.dir.dx, p.dir.dy);
         if (hit && p.state === 'predict') {
-          ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y); ctx.lineTo(hit.x, hit.y); ctx.stroke(); ctx.restore();
+          R.drawAimLine(ctx, mode.cue, p.dir.dx, p.dir.dy, hit);
           R.drawArrow(ctx, mode.cue.x, mode.cue.y, mode.cue.x + p.dir.dx * 18, mode.cue.y + p.dir.dy * 18, '#fff', 1.4);
         }
       }
@@ -333,6 +328,17 @@
         const q = world.boundary.inner(BR); ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
         ctx.strokeRect(q.x0 - BR, q.y0 - BR, q.x1 - q.x0 + 2 * BR, q.y1 - q.y0 + 2 * BR); ctx.restore();
       }
+    }
+    // 큐: 공이 멈춰 있을 때 항상 보인다. 조준 중엔 방향을 따라 돌고 세기만큼 뒤로 당겨진다
+    if (!world.anyMoving() && !mode.drag && !(mode.predict && (mode.predict.state === 'shooting' || mode.predict.state === 'result'))) {
+      let dir = null, pull = 3 + Math.sin(t * 2.5) * 1.5;
+      const a = mode.aim ? global.App.aimFrom(mode.cue, mode.aim, W) : null;
+      if (a && a.d >= BR * 1.5) { dir = a; pull = 4 + a.power * 16; }
+      else if (mode.predict && mode.predict.dir) dir = mode.predict.dir;
+      else if (mode.lastDir) dir = mode.lastDir;
+      else if (!mode.predict) { const dx = mode.red.x - mode.cue.x, dy = mode.red.y - mode.cue.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
+      else dir = { dx: 0.8, dy: -0.6 };
+      R.drawCue(ctx, mode.cue.x, mode.cue.y, dir.dx, dir.dy, pull, BR);
     }
     for (const b of world.balls) R.drawBall(ctx, b);
     if (mode.confetti) {

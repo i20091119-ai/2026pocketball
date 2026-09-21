@@ -77,6 +77,7 @@
   /* ---------- 새 게임 ---------- */
   mode.newGame = function () {
     const o = mode.opts;
+    mode.lastDir = null;
     mode.el.setup.classList.remove('active');
     mode.phase = 'play';
     mode.players = [{ score: 0, group: null }, { score: 0, group: null }];
@@ -216,6 +217,7 @@
     const a = global.App.aimFrom(mode.cue, p, W);
     mode.aim = null;
     if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
+    mode.lastDir = { dx: a.dx, dy: a.dy };
     mode.cue.vx = a.dx * speedFromPower(a.power); mode.cue.vy = a.dy * speedFromPower(a.power);
     global.App.sound.shoot(a.power);
     mode.ballInHand = false;
@@ -266,20 +268,17 @@
     if (mode.aim && !world.anyMoving() && mode.phase === 'play') {
       const a = global.App.aimFrom(mode.cue, mode.aim, W);
       if (a && a.d >= BR * 1.5) {
-        ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y);
         if (mode.aimLine) {
           const hit = world.castRay(mode.cue, a.dx, a.dy);
-          if (hit) {
-            ctx.lineTo(hit.x, hit.y); ctx.stroke();
-            ctx.setLineDash([]); ctx.beginPath(); ctx.arc(hit.x, hit.y, BR, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.stroke();
-            if (hit.kind === 'ball') {
-              const o = hit.ball, ox = o.x - hit.x, oy = o.y - hit.y, l = Math.hypot(ox, oy) || 1;
-              R.drawArrow(ctx, o.x, o.y, o.x + ox / l * 22, o.y + oy / l * 22, 'rgba(255,230,120,.95)', 1.3);
-            }
+          R.drawAimLine(ctx, mode.cue, a.dx, a.dy, hit);
+          if (hit && hit.kind === 'ball') {
+            const o = hit.ball, ox = o.x - hit.x, oy = o.y - hit.y, l = Math.hypot(ox, oy) || 1;
+            R.drawArrow(ctx, o.x, o.y, o.x + ox / l * 22, o.y + oy / l * 22, 'rgba(255,230,120,.95)', 1.3);
           }
-        } else { ctx.lineTo(mode.cue.x + a.dx * 30, mode.cue.y + a.dy * 30); ctx.stroke(); }
-        ctx.restore();
+        } else {
+          ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y); ctx.lineTo(mode.cue.x + a.dx * 30, mode.cue.y + a.dy * 30); ctx.stroke(); ctx.restore();
+        }
         const pw = a.power;
         ctx.save(); ctx.strokeStyle = `hsl(${120 - pw * 120},90%,55%)`; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
         ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y); ctx.lineTo(mode.cue.x - a.dx * (6 + pw * 24), mode.cue.y - a.dy * (6 + pw * 24)); ctx.stroke(); ctx.restore();
@@ -288,6 +287,14 @@
     if (mode.ballInHand && mode.phase === 'play' && !world.anyMoving()) {
       ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.setLineDash([2, 2]); ctx.lineWidth = 0.8;
       ctx.beginPath(); ctx.arc(mode.cue.x, mode.cue.y, BR * 2 + Math.sin(t * 5), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    if (mode.phase === 'play' && !world.anyMoving() && !mode.drag && !mode.cue.pocketed) {
+      let dir = null, pull = 3 + Math.sin(t * 2.5) * 1.5;
+      const a = mode.aim ? global.App.aimFrom(mode.cue, mode.aim, W) : null;
+      if (a && a.d >= BR * 1.5) { dir = a; pull = 4 + a.power * 16; }
+      else if (mode.lastDir) dir = mode.lastDir;
+      else { const dx = 150 - mode.cue.x, dy = 50 - mode.cue.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
+      R.drawCue(ctx, mode.cue.x, mode.cue.y, dir.dx, dir.dy, pull, BR);
     }
     for (const b of world.balls) R.drawBall(ctx, b);
   };

@@ -139,6 +139,37 @@
     ctx.restore();
   }
 
+  /* 큐(당구 막대). (dx,dy)는 발사 방향(단위벡터), 큐는 공의 반대쪽에 놓인다. pull = 뒤로 당긴 거리 */
+  function drawCue(ctx, x, y, dx, dy, pull, r, alpha) {
+    const len = 75, gap = r * 1.25 + (pull || 0);
+    const tx = x - dx * gap, ty = y - dy * gap;          // 팁
+    const ex = tx - dx * len, ey = ty - dy * len;        // 손잡이 끝
+    const line = (a, b, c, d) => { ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); };
+    ctx.save();
+    ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 3.6; line(tx + 0.8, ty + 1.4, ex + 0.8, ey + 1.4);
+    const g = ctx.createLinearGradient(tx, ty, ex, ey);
+    g.addColorStop(0, '#f0d5a3'); g.addColorStop(0.5, '#c58f52'); g.addColorStop(0.62, '#b07a3f'); g.addColorStop(0.64, '#2a2a2a'); g.addColorStop(1, '#151515');
+    ctx.strokeStyle = g; ctx.lineWidth = 3; line(tx, ty, ex, ey);
+    ctx.strokeStyle = '#f6f6f6'; ctx.lineWidth = 2.8; line(tx - dx * 1.2, ty - dy * 1.2, tx - dx * 5, ty - dy * 5);   // 페룰
+    ctx.strokeStyle = '#3f7fe0'; ctx.lineWidth = 2.8; line(tx, ty, tx - dx * 1.6, ty - dy * 1.6);                   // 초크 묻은 팁
+    ctx.restore();
+  }
+
+  /* 조준선: 공 중심에서 첫 접촉까지. 쿠션이면 벽면까지 이어 그리고, 공이면 닿는 자리에 유령 공을 그린다 */
+  function drawAimLine(ctx, ball, dx, dy, hit) {
+    ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(ball.x, ball.y);
+    if (!hit) { ctx.lineTo(ball.x + dx * 400, ball.y + dy * 400); ctx.stroke(); ctx.restore(); return; }
+    if (hit.kind === 'wall') { ctx.lineTo(hit.x + dx * ball.r, hit.y + dy * ball.r); ctx.stroke(); }
+    else {
+      ctx.lineTo(hit.x, hit.y); ctx.stroke();
+      ctx.setLineDash([]); ctx.beginPath(); ctx.arc(hit.x, hit.y, ball.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 0.8; ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   function drawText(ctx, text, x, y, size, color, align) {
     ctx.save();
     ctx.fillStyle = color || '#fff'; ctx.font = `bold ${size}px sans-serif`;
@@ -155,5 +186,5 @@
     ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
   }
 
-  global.Render = { colorForNumber, drawBall, drawRectTable, drawEllipseTable, drawTrail, drawBurst, drawMarker, drawFocus, drawArrow, drawText, roundRect };
+  global.Render = { colorForNumber, drawBall, drawCue, drawAimLine, drawRectTable, drawEllipseTable, drawTrail, drawBurst, drawMarker, drawFocus, drawArrow, drawText, roundRect };
 })(window);

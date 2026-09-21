@@ -190,6 +190,7 @@
     const a = global.App.aimFrom(mode.yellow, p, 2 * A);
     mode.aim = null;
     if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
+    mode.lastDir = { dx: a.dx, dy: a.dy };
     mode.shoot(a.dx, a.dy, Math.max(200, speedFromPower(a.power)));
   };
 
@@ -257,9 +258,16 @@
     if (mode.aim && !world.anyMoving()) {
       const a = global.App.aimFrom(mode.yellow, mode.aim, 2 * A);
       if (a && a.d >= BR * 1.5) {
-        const hit = world.castRay(mode.yellow, a.dx, a.dy);
-        if (hit) { ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mode.yellow.x, mode.yellow.y); ctx.lineTo(hit.x, hit.y); ctx.stroke(); ctx.restore(); }
+        R.drawAimLine(ctx, mode.yellow, a.dx, a.dy, world.castRay(mode.yellow, a.dx, a.dy));
       }
+    }
+    if (!world.anyMoving() && !mode.drag && !(mode.rays && mode.rays.progress < 1)) {
+      let dir = null, pull = 3 + Math.sin(t * 2.5) * 1.5;
+      const a = mode.aim ? global.App.aimFrom(mode.yellow, mode.aim, 2 * A) : null;
+      if (a && a.d >= BR * 1.5) { dir = a; pull = 4 + a.power * 16; }
+      else if (mode.lastDir) dir = mode.lastDir;
+      else { const dx = mode.red.x - mode.yellow.x, dy = mode.red.y - mode.yellow.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
+      R.drawCue(ctx, mode.yellow.x, mode.yellow.y, dir.dx, dir.dy, pull, BR);
     }
     for (const b of world.balls) R.drawBall(ctx, b, { glow: mode.onFocus(b) !== null ? 'rgba(255,230,120,.9)' : null });
   };
