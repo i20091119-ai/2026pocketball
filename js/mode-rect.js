@@ -11,6 +11,7 @@
     3: '쿠션에 세 번 맞히고 빨간 공을 맞혀 보세요',
   };
   const PREDICT_SPEED = 250;
+  const SEG_COLORS = ['rgba(255,255,255,.95)', '#ffe066', '#ff9f43', '#ff6b81', '#a29bfe', '#7bed9f'];
 
   const mode = {
     id: 'rect', timeScale: 1,
@@ -32,8 +33,10 @@
     world.onCushion = (b, hit) => {
       if (b !== mode.cue || !mode.shot) return;
       if (!mode.shot.hitRed) mode.shot.cushions++;
+      if (!mode.shot.hitRed) { if (hit.nx) mode.shot.ti += Math.sign(mode.shot.udx); if (hit.ny) mode.shot.tj += Math.sign(mode.shot.udy); }
       mode.marks.push({ x: hit.x, y: hit.y, n: mode.shot.hitRed ? null : mode.shot.cushions }); // 빨간 공을 맞힌 뒤의 튕김은 숫자 없이
-      mode.trail.push({ x: hit.cx, y: hit.cy });
+      mode.trail.push({ x: hit.cx, y: hit.cy, k: mode.shot.cushions });
+      if (!mode.shot.hitRed) mode.shot.ghostPts.push({ x: imageOf({ x: hit.cx, y: hit.cy }, mode.shot.ti, mode.shot.tj), k: mode.shot.cushions });
       global.App.sound.cushion(b.speed / 420);
       if (mode.predict && mode.predict.state === 'shooting' && mode.shot.cushions === 2 && !mode.predict.actual) {
         mode.predict.actual = { x: hit.x, y: hit.y };
@@ -45,7 +48,8 @@
       global.App.sound.click(Math.max(a.speed, b.speed) / 420);
       if ((a === mode.cue || b === mode.cue) && !mode.shot.hitRed && !mode.predict) {
         mode.shot.hitRed = true;
-        mode.trail.push({ x: mode.cue.x, y: mode.cue.y });
+        mode.shot.ghostFrozen = imageOf(mode.cue, mode.shot.ti, mode.shot.tj);
+        mode.trail.push({ x: mode.cue.x, y: mode.cue.y, k: mode.shot.cushions });
         mode.judge();
       }
     };
@@ -100,6 +104,8 @@
     mode.mirror = on;
     mode.el.mirror.textContent = on ? '🪞 거울 끄기' : '🪞 거울 켜기';
     mode.el.mirror.classList.toggle('on', on);
+    if (on && typeof mode.level === 'number') global.App.msg(`🪞 쿠션 너머는 거울 세계! 휘는 길이 거울 세계에선 직선이에요. 숫자 ${mode.level} 그림자를 향해 똑바로 쳐 보세요`);
+    else if (!on && typeof mode.level === 'number') global.App.msg(LEVEL_MSG[mode.level]);
   };
   mode.shuffle = function () {
     if (mode.world.anyMoving()) return;
@@ -115,8 +121,8 @@
     mode.lastShot = { snap: mode.world.snapshot(), dx, dy, speed };
     mode.cue.vx = dx * speed; mode.cue.vy = dy * speed;
     global.App.sound.shoot(speed / 420);
-    mode.shot = { cushions: 0, hitRed: false, done: false };
-    mode.trail = [{ x: mode.cue.x, y: mode.cue.y }]; mode.marks = [];
+    mode.shot = { cushions: 0, hitRed: false, done: false, udx: dx, udy: dy, ti: 0, tj: 0, ghostFrozen: null, ghostStart: { x: mode.cue.x, y: mode.cue.y }, ghostPts: [{ x: { x: mode.cue.x, y: mode.cue.y }, k: 0 }] };
+    mode.trail = [{ x: mode.cue.x, y: mode.cue.y, k: 0 }]; mode.marks = [];
     mode.tick = 0;
     if (mode.level !== 'predict') global.App.msg('공이 굴러가요…');
   };
@@ -229,9 +235,9 @@
     world.step(dt);
     if (mode.shot) {
       mode.tick = (mode.tick || 0) + 1;
-      if (mode.tick % 4 === 0 && mode.cue.moving) mode.trail.push({ x: mode.cue.x, y: mode.cue.y });
+      if (mode.tick % 4 === 0 && mode.cue.moving) mode.trail.push({ x: mode.cue.x, y: mode.cue.y, k: mode.shot.cushions });
       if (wasMoving && !world.anyMoving()) {
-        mode.trail.push({ x: mode.cue.x, y: mode.cue.y });
+        mode.trail.push({ x: mode.cue.x, y: mode.cue.y, k: mode.shot.cushions });
         if (mode.predict) {
           if (mode.predict.state === 'shooting') { // 두 번째 쿠션 전에 멈춤
             mode.predict.state = 'result';
@@ -256,6 +262,21 @@
       return { x: BR - L * w - rail - BR, y: BR - L * h - rail - BR, w: (2 * L + 1) * w + 2 * (rail + BR), h: (2 * L + 1) * h + 2 * (rail + BR) };
     }
     return { x: -rail, y: -rail, w: W + 2 * rail, h: H + 2 * rail };
+  };
+
+  /* 조준 방향으로 쿠션에 maxSeg번 튕기는 실제 경로(접힌 길). 빨간 공에 닿으면 거기서 끝 */
+  mode.foldedPath = function (dx, dy, maxSeg) {
+    const world = mode.world, segs = [];
+    let p = { x: mode.cue.x, y: mode.cue.y, r: BR }, hitRed = false;
+    for (let k = 0; k <= maxSeg; k++) {
+      const hit = world.castRay(p, dx, dy);
+      if (!hit) break;
+      segs.push({ x0: p.x, y0: p.y, x1: hit.x, y1: hit.y, k });
+      if (hit.kind === 'ball') { hitRed = true; break; }
+      const vn = dx * hit.nx + dy * hit.ny; dx -= 2 * vn * hit.nx; dy -= 2 * vn * hit.ny;
+      p = { x: hit.x + dx * 0.01, y: hit.y + dy * 0.01, r: BR };
+    }
+    return { segs, hitRed };
   };
 
   /* 거울 타일 (i,j)에서 점 p의 상 */
@@ -283,16 +304,25 @@
         ctx.strokeRect(BR + i * w, BR + j * h, w, h);
         ctx.restore();
         const im = imageOf(mode.red, i, j);
-        ctx.save(); ctx.globalAlpha = n === L ? 1 : 0.45;
+        ctx.save(); ctx.globalAlpha = n === L ? 1 : 0.3;
         R.drawBall(ctx, { x: im.x, y: im.y, r: BR, color: '#e0362c', number: null }, { glow: n === L ? '#ffe066' : null });
-        R.drawText(ctx, String(n), im.x, im.y - BR * 2.1, 7, n === L ? '#ffe066' : '#fff');
+        if (n === L) { const pulse = 1 + 0.15 * Math.sin(t * 5); ctx.beginPath(); ctx.arc(im.x, im.y, BR * 2.2 * pulse, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,224,102,.7)'; ctx.lineWidth = 1; ctx.setLineDash([2, 2]); ctx.stroke(); ctx.setLineDash([]); }
+        R.drawText(ctx, String(n), im.x, im.y - BR * 2.6, n === L ? 9 : 6.5, n === L ? '#ffe066' : '#fff');
         ctx.restore();
       }
     }
     R.drawRectTable(ctx, W, H, { cloth: '#2c8a4a' });
 
     // 지난 경로
-    R.drawTrail(ctx, mode.trail, 'rgba(255,255,255,.85)', 1.2);
+    if (mode.trail.length > 1) {
+      ctx.save(); ctx.lineWidth = mode.mirror ? 2 : 1.3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (let i = 1; i < mode.trail.length; i++) {
+        const a = mode.trail[i - 1], b = mode.trail[i];
+        ctx.strokeStyle = SEG_COLORS[Math.min(a.k || 0, SEG_COLORS.length - 1)];
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      ctx.restore();
+    }
     for (const m of mode.marks) { R.drawBurst(ctx, m.x, m.y, m.n == null ? 2.5 : 4, m.n == null ? 'rgba(255,224,102,.55)' : '#ffe066'); if (m.n != null) R.drawText(ctx, String(m.n), m.x + (m.x < W / 2 ? 7 : -7), m.y + (m.y < H / 2 ? 7 : -7), 6, '#ffe066'); }
 
     // 조준선
@@ -300,9 +330,20 @@
       const a = global.App.aimFrom(mode.cue, mode.aim, W);
       if (a && a.d >= BR * 1.5) {
         if (mode.mirror && L) {
-          const len = (2 * L + 2) * W;
-          ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.moveTo(mode.cue.x, mode.cue.y); ctx.lineTo(mode.cue.x + a.dx * len, mode.cue.y + a.dy * len); ctx.stroke(); ctx.restore();
+          // 두 길을 같은 색 구간으로: 진짜 테이블엔 접힌 길, 거울 세계엔 곧은 길
+          const fp = mode.foldedPath(a.dx, a.dy, L);
+          ctx.save(); ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.setLineDash([4, 3]);
+          let sx = mode.cue.x, sy = mode.cue.y;
+          for (const s of fp.segs) {
+            const len = Math.hypot(s.x1 - s.x0, s.y1 - s.y0);
+            ctx.strokeStyle = SEG_COLORS[Math.min(s.k, SEG_COLORS.length - 1)];
+            ctx.beginPath(); ctx.moveTo(s.x0, s.y0); ctx.lineTo(s.x1, s.y1); ctx.stroke();                     // 접힌 길
+            ctx.beginPath(); ctx.moveTo(sx, sy); sx += a.dx * len; sy += a.dy * len; ctx.lineTo(sx, sy); ctx.stroke(); // 곧은 길
+          }
+          if (!fp.hitRed) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + a.dx * W, sy + a.dy * W); ctx.stroke(); }
+          ctx.setLineDash([]);
+          if (fp.hitRed) { ctx.beginPath(); ctx.arc(sx, sy, BR, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fill(); }
+          ctx.restore();
         } else R.drawAimLine(ctx, mode.cue, a.dx, a.dy, world.castRay(mode.cue, a.dx, a.dy));
         if (!mode.predict) {
           // 세기 표시
@@ -339,6 +380,19 @@
       else if (!mode.predict) { const dx = mode.red.x - mode.cue.x, dy = mode.red.y - mode.cue.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
       else dir = { dx: 0.8, dy: -0.6 };
       R.drawCue(ctx, mode.cue.x, mode.cue.y, dir.dx, dir.dy, pull, BR);
+    }
+    if (mode.mirror && L && mode.shot && mode.shot.ghostStart) {
+      const g = mode.shot.ghostFrozen || imageOf(mode.cue, mode.shot.ti, mode.shot.tj);
+      ctx.save(); ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.setLineDash([4, 3]);
+      const gp = mode.shot.ghostPts;
+      for (let i = 0; i <= gp.length - 1; i++) {
+        const a = gp[i].x, b = i + 1 < gp.length ? gp[i + 1].x : g;
+        ctx.strokeStyle = SEG_COLORS[Math.min(gp[i].k, SEG_COLORS.length - 1)];
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+      }
+      ctx.setLineDash([]); ctx.globalAlpha = 0.55;
+      R.drawBall(ctx, { x: g.x, y: g.y, r: BR, color: '#ffffff', number: null });
+      ctx.restore();
     }
     for (const b of world.balls) R.drawBall(ctx, b);
     if (mode.confetti) {
