@@ -39,7 +39,7 @@
     mode.el = {
       setup: $('pocket-setup'), over: $('pocket-over'), overText: $('pocket-over-text'),
       turn: $('pocket-turn'), score: $('pocket-score'), timer: $('pocket-timer'),
-      aimBtn: $('pocket-aimline'), newBtn: $('pocket-new'),
+      aimBtn: $('pocket-aimline'), newBtn: $('pocket-new'), retryBtn: $('pocket-retry'),
       start: $('pocket-start'), again: $('pocket-again'),
     };
     mode.el.setup.querySelectorAll('.seg').forEach(seg => {
@@ -52,6 +52,7 @@
     mode.el.start.addEventListener('click', () => mode.newGame());
     mode.el.again.addEventListener('click', () => { mode.el.over.classList.remove('active'); mode.showSetup(); });
     mode.el.newBtn.addEventListener('click', () => mode.showSetup());
+    mode.el.retryBtn.addEventListener('click', () => { if (mode.phase === 'play') mode.newGame(); }); // 같은 설정으로 처음부터
     mode.el.aimBtn.addEventListener('click', () => mode.setAimLine(!mode.aimLine));
   };
 

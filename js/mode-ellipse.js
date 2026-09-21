@@ -60,7 +60,7 @@
   mode.reset = function () { mode.history = []; mode.renderBars(); mode.oldTrails = []; mode.setShape(60); mode.el.shape.value = 60; mode.placeOnFoci(); };
 
   mode.placeOnFoci = function () {
-    if (mode.world.anyMoving()) return;
+    mode.world.balls.forEach(b => b.stop()); mode.shot = null; mode.timeScale = 1; // 굴러가는 중이어도 바로 되돌린다
     const [f1, f2] = mode.world.boundary.foci();
     mode.yellow.x = f1.x; mode.yellow.y = f1.y; mode.red.x = f2.x; mode.red.y = f2.y;
     mode.yellow.stop(); mode.red.stop();

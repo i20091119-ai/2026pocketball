@@ -58,12 +58,13 @@
     mode.world = world;
 
     const $ = id => document.getElementById(id);
-    mode.el = { tabs: $('rect-tabs'), mirror: $('rect-mirror'), shuffle: $('rect-shuffle'), replay: $('rect-replay'), fire: $('rect-fire'), reaim: $('rect-reaim'),
+    mode.el = { tabs: $('rect-tabs'), retry: $('rect-retry'), mirror: $('rect-mirror'), shuffle: $('rect-shuffle'), replay: $('rect-replay'), fire: $('rect-fire'), reaim: $('rect-reaim'),
       angles: $('rect-angles'), stars: $('rect-stars'), reward: $('rect-reward'), rewardIcon: $('reward-icon'), rewardTitle: $('reward-title'), rewardStars: $('reward-stars'), rewardSub: $('reward-sub'), rewardNext: $('reward-next'), rewardStay: $('reward-stay') };
     mode.el.rewardStay.addEventListener('click', () => { mode.el.reward.classList.remove('active'); if (mode.starCount() === 3) { mode.stars = { 1: false, 2: false, 3: false }; mode.setLevel(1); } });
     mode.el.rewardNext.addEventListener('click', () => { mode.el.reward.classList.remove('active'); mode.rewardNextAction(); });
     mode.el.tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => mode.setLevel(b.dataset.level)));
     mode.el.mirror.addEventListener('click', () => mode.setMirror(!mode.mirror));
+    mode.el.retry.addEventListener('click', () => mode.retry());
     mode.el.angles.addEventListener('click', () => mode.setAngles(!mode.showAngles));
     mode.el.shuffle.addEventListener('click', () => mode.shuffle());
     mode.el.replay.addEventListener('click', () => mode.replay());
@@ -90,12 +91,12 @@
       mode.world.balls = [mode.cue];
       mode.cue.x = 50; mode.cue.y = 50; // 예측 놀이는 늘 같은 자리에서 시작
       mode.setMirror(false);
-      mode.el.mirror.hidden = true; mode.el.shuffle.hidden = true; mode.el.replay.hidden = true;
+      mode.el.mirror.hidden = true; mode.el.shuffle.hidden = true; mode.el.replay.hidden = true; mode.el.retry.hidden = true;
       mode.startPredict();
     } else {
       mode.predict = null;
       mode.world.balls = [mode.cue, mode.red];
-      mode.el.mirror.hidden = false; mode.el.shuffle.hidden = false; mode.el.replay.hidden = false;
+      mode.el.mirror.hidden = false; mode.el.shuffle.hidden = false; mode.el.replay.hidden = false; mode.el.retry.hidden = false;
       mode.el.fire.hidden = true; mode.el.reaim.hidden = true;
       if (!mode.world.boundary.contains(mode.red.x, mode.red.y, BR)) { mode.red.x = 150; mode.red.y = 50; }
       global.App.msg(LEVEL_MSG[mode.level]);
@@ -121,6 +122,16 @@
     mode.el.mirror.classList.toggle('on', on);
     if (on && typeof mode.level === 'number') global.App.msg(`🪞 쿠션 너머는 거울 세계! 휘는 길이 거울 세계에선 직선이에요. 숫자 ${mode.level} 그림자를 향해 똑바로 쳐 보세요`);
     else if (!on && typeof mode.level === 'number') global.App.msg(LEVEL_MSG[mode.level]);
+  };
+  /* 다시 하기: 마지막으로 친 자리로 공을 되돌린다(없으면 기본 자리) */
+  mode.retry = function () {
+    mode.stopAll();
+    if (mode.predict) { mode.startPredict(); return; }
+    if (mode.lastShot) mode.world.restore(mode.lastShot.snap);
+    else { mode.cue.x = 50; mode.cue.y = 50; mode.red.x = 150; mode.red.y = 50; }
+    mode.trail = []; mode.marks = []; mode.confetti = null;
+    global.App.sound.tap();
+    global.App.msg('공을 되돌렸어요. ' + LEVEL_MSG[mode.level]);
   };
   mode.shuffle = function () {
     if (mode.world.anyMoving()) return;
