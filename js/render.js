@@ -170,6 +170,34 @@
     ctx.restore();
   }
 
+  /* 입사각·반사각 표시. (px,py) 반사점(공 중심 경로의 꺾임점), (nx,ny) 안쪽 법선,
+     din = 들어오는 방향, dout = 나가는 방향(단위벡터). tangent=true면 접선(거울)도 그린다 */
+  function drawAngles(ctx, px, py, nx, ny, din, dout, o) {
+    o = o || {};
+    const rad = o.radius || 13, L = o.length || 26;
+    const aN = Math.atan2(ny, nx), aIn = Math.atan2(-din.y, -din.x), aOut = Math.atan2(dout.y, dout.x);
+    const degIn = Math.round(Math.acos(Math.max(-1, Math.min(1, -din.x * nx - din.y * ny))) * 180 / Math.PI);
+    const degOut = Math.round(Math.acos(Math.max(-1, Math.min(1, dout.x * nx + dout.y * ny))) * 180 / Math.PI);
+    ctx.save(); ctx.lineCap = 'round';
+    // 접선(거울)
+    if (o.tangent) { ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px - ny * L, py + nx * L); ctx.lineTo(px + ny * L, py - nx * L); ctx.stroke(); }
+    // 법선
+    ctx.setLineDash([2.5, 2]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px - nx * 4, py - ny * 4); ctx.lineTo(px + nx * L, py + ny * L); ctx.stroke(); ctx.setLineDash([]);
+    // 부채꼴 두 개: 법선 → 들어온 쪽, 법선 → 나간 쪽
+    const arc = (a1, a2, color) => {
+      let d = a2 - a1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.arc(px, py, rad, a1, a1 + d, d < 0); ctx.closePath();
+      ctx.fillStyle = color.replace('1)', '.35)'); ctx.fill(); ctx.strokeStyle = color; ctx.lineWidth = 1.2; ctx.stroke();
+      return a1 + d / 2;
+    };
+    const mIn = arc(aN, aIn, 'rgba(247,148,29,1)'), mOut = arc(aN, aOut, 'rgba(141,198,63,1)');
+    const lab = (ang, txt, color) => { const x = px + Math.cos(ang) * (rad + 8), y = py + Math.sin(ang) * (rad + 8); ctx.font = 'bold 6.5px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 2.2; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y); };
+    lab(mIn, degIn + '°', '#ffd28a'); lab(mOut, degOut + '°', '#c9f28a');
+    ctx.restore();
+    return { degIn, degOut };
+  }
+
   function drawText(ctx, text, x, y, size, color, align) {
     ctx.save();
     ctx.fillStyle = color || '#fff'; ctx.font = `bold ${size}px sans-serif`;
@@ -186,5 +214,5 @@
     ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
   }
 
-  global.Render = { colorForNumber, drawBall, drawCue, drawAimLine, drawRectTable, drawEllipseTable, drawTrail, drawBurst, drawMarker, drawFocus, drawArrow, drawText, roundRect };
+  global.Render = { colorForNumber, drawBall, drawCue, drawAimLine, drawAngles, drawRectTable, drawEllipseTable, drawTrail, drawBurst, drawMarker, drawFocus, drawArrow, drawText, roundRect };
 })(window);

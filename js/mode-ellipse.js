@@ -10,7 +10,7 @@
   const mode = {
     id: 'ellipse', timeScale: 1,
     world: null, yellow: null, red: null,
-    aim: null, drag: null, downAt: 0,
+    aim: null, drag: null, downAt: 0, showAngles: false,
     shot: null, lastShot: null,
     trail: [], oldTrails: [], marks: [],
     history: [],
@@ -27,6 +27,8 @@
       if (b === mode.yellow && mode.shot) {
         const s = mode.shot;
         if (!s.hitRed) { s.dist += Math.hypot(hit.cx - s.px, hit.cy - s.py); s.px = hit.cx; s.py = hit.cy; }
+        const sp = b.speed || 1, out = { x: b.vx / sp, y: b.vy / sp }, vn = out.x * hit.nx + out.y * hit.ny;
+        hit.din = { x: out.x - 2 * vn * hit.nx, y: out.y - 2 * vn * hit.ny }; hit.out = out;
         mode.marks.push(hit); mode.trail.push({ x: hit.cx, y: hit.cy });
       }
       global.App.sound.cushion(b.speed / 420);
@@ -44,7 +46,8 @@
     mode.world = world;
 
     const $ = id => document.getElementById(id);
-    mode.el = { reset: $('ellipse-reset'), rays: $('ellipse-rays'), replay: $('ellipse-replay'), shape: $('ellipse-shape'), bars: $('ellipse-bars') };
+    mode.el = { reset: $('ellipse-reset'), rays: $('ellipse-rays'), replay: $('ellipse-replay'), shape: $('ellipse-shape'), bars: $('ellipse-bars'), angles: $('ellipse-angles') };
+    mode.el.angles.addEventListener('click', () => { mode.showAngles = !mode.showAngles; mode.el.angles.classList.toggle('on', mode.showAngles); mode.el.angles.textContent = mode.showAngles ? '📐 각도 끄기' : '📐 각도 보기'; if (mode.showAngles) global.App.msg('📐 곡선에서도 거울(접선) 기준으로 들어간 각(주황)과 나온 각(초록)이 같아요'); });
     mode.el.reset.addEventListener('click', () => mode.placeOnFoci());
     mode.el.rays.addEventListener('click', () => mode.startRays());
     mode.el.replay.addEventListener('click', () => mode.replay());
@@ -270,9 +273,14 @@
     for (const tr of mode.oldTrails) R.drawTrail(ctx, tr, 'rgba(255,255,255,.28)', 0.9);
     R.drawTrail(ctx, mode.trail, 'rgba(255,255,255,.9)', 1.2);
     for (const m of mode.marks) R.drawBurst(ctx, m.x, m.y, 4, '#ffe066');
+    if (mode.showAngles) for (const m of mode.marks) if (m.din) R.drawAngles(ctx, m.cx, m.cy, m.nx, m.ny, m.din, m.out, { tangent: true });
     // 조준선
     if (mode.aim && !world.anyMoving()) {
       const a = global.App.aimDrag(mode.aimStart, mode.aim, 2 * A);
+      if (a && mode.showAngles) {
+        const hit = world.castRay(mode.yellow, a.dx, a.dy);
+        if (hit && hit.kind === 'wall') { const vn = a.dx * hit.nx + a.dy * hit.ny; R.drawAngles(ctx, hit.x, hit.y, hit.nx, hit.ny, { x: a.dx, y: a.dy }, { x: a.dx - 2 * vn * hit.nx, y: a.dy - 2 * vn * hit.ny }, { tangent: true }); }
+      }
       if (a) {
         R.drawAimLine(ctx, mode.yellow, a.dx, a.dy, world.castRay(mode.yellow, a.dx, a.dy));
       }

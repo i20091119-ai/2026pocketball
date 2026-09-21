@@ -57,14 +57,28 @@
   };
   /* ---------- 하는 법 안내 ---------- */
   const helpSeen = {};
+  let helpStep = 0, helpItems = [];
+  function renderHelpStep() {
+    helpItems.forEach((li, i) => li.classList.toggle('cur', i === helpStep));
+    const dots = document.getElementById('help-dots');
+    dots.innerHTML = helpItems.map((_, i) => `<i class="${i === helpStep ? 'on' : i < helpStep ? 'done' : ''}"></i>`).join('');
+    document.getElementById('help-prev').hidden = helpStep === 0;
+    document.getElementById('help-close').textContent = helpStep === helpItems.length - 1 ? '이해했어요! 시작' : '다음 →';
+  }
   App.showHelp = function (name) {
     const modal = document.getElementById('help');
     modal.querySelectorAll('.help-page').forEach(p => p.classList.toggle('active', p.dataset.for === name));
+    helpItems = Array.from(modal.querySelectorAll('.help-page.active .steps li'));
+    helpStep = 0; renderHelpStep();
     modal.classList.add('active');
     helpSeen[name] = true;
   };
   document.querySelectorAll('[data-help]').forEach(b => b.addEventListener('click', () => App.showHelp(b.dataset.help)));
-  document.getElementById('help-close').addEventListener('click', () => document.getElementById('help').classList.remove('active'));
+  document.getElementById('help-close').addEventListener('click', () => {
+    if (helpStep < helpItems.length - 1) { helpStep++; renderHelpStep(); }
+    else document.getElementById('help').classList.remove('active');
+  });
+  document.getElementById('help-prev').addEventListener('click', () => { if (helpStep > 0) { helpStep--; renderHelpStep(); } });
   App.resetHelp = () => { for (const k in helpSeen) delete helpSeen[k]; };
 
   App.msg = function (text, cls) {

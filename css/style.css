@@ -113,16 +113,23 @@ input[type=range] { width: 170px; accent-color: var(--blue); }
 .help-box h2 { text-align: center; }
 .help-page { display: none; }
 .help-page.active { display: block; }
-.steps { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; }
-.steps li { display: flex; align-items: center; gap: 12px; font-size: 18px; line-height: 1.45; border-radius: 16px; padding: 10px 14px; border-left: 6px solid var(--blue); background: rgba(10,143,216,.08); }
+.steps { list-style: none; padding: 0; margin: 0 0 16px; display: flex; flex-direction: column; gap: 10px; min-height: 120px; justify-content: center; }
+.steps li { display: none; align-items: center; gap: 14px; font-size: 22px; line-height: 1.5; border-radius: 16px; padding: 10px 14px; border-left: 6px solid var(--blue); background: rgba(10,143,216,.08); }
 .steps li:nth-child(1) { border-color: var(--red); background: rgba(226,35,26,.07); }
 .steps li:nth-child(2) { border-color: var(--orange); background: rgba(247,148,29,.1); }
 .steps li:nth-child(3) { border-color: var(--green); background: rgba(141,198,63,.12); }
 .steps li:nth-child(4) { border-color: var(--blue); background: rgba(10,143,216,.09); }
 .steps li:nth-child(5) { border-color: var(--purple); background: rgba(142,68,173,.09); }
-.steps li > span { font-size: 30px; flex: 0 0 40px; text-align: center; }
+.steps li.cur { display: flex; animation: slidein .28s ease-out; }
+@keyframes slidein { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+.steps li > span { font-size: 40px; flex: 0 0 52px; text-align: center; }
+.help-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.help-dots { display: flex; gap: 7px; }
+.help-dots i { width: 11px; height: 11px; border-radius: 50%; background: rgba(34,48,71,.18); }
+.help-dots i.on { background: var(--blue); transform: scale(1.25); }
+.help-dots i.done { background: var(--green); }
 .steps b { color: var(--ink); font-family: var(--head); font-weight: 400; }
-#help-close { display: block; margin: 0 auto; }
+#help-prev[hidden] { visibility: hidden; display: inline-block; }
 
 /* 별 모음 · 보상 */
 .stars { display: flex; gap: 2px; font-size: 30px; line-height: 1; color: rgba(34,48,71,.2); white-space: nowrap; }
@@ -144,7 +151,7 @@ input[type=range] { width: 170px; accent-color: var(--blue); }
   .turn { font-size: 15px; padding: 6px 10px; }
   .score { font-size: 14px; } .timer { font-size: 13px; }
   input[type=range] { width: 120px; }
-  .steps li { font-size: 15px; padding: 8px 10px; gap: 8px; } .steps li > span { font-size: 24px; flex-basis: 30px; }
+  .steps li { font-size: 17px; padding: 8px 10px; gap: 8px; } .steps li > span { font-size: 30px; flex-basis: 38px; }
   .help-btn { font-size: 13px; padding: 6px 8px; min-height: 40px; }
   .stars { font-size: 22px; } .big-star { font-size: 64px; } .reward-stars { font-size: 32px; }
   .card { min-height: 180px; }

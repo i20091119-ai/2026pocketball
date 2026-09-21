@@ -17,7 +17,7 @@
     id: 'rect', timeScale: 1,
     world: null, cue: null, red: null,
     level: 1, stars: { 1: false, 2: false, 3: false },
-    mirror: false,
+    mirror: false, showAngles: false,
     aim: null, drag: null, downAt: 0,
     shot: null, lastShot: null,
     trail: [], marks: [],
@@ -34,7 +34,9 @@
       if (b !== mode.cue || !mode.shot) return;
       if (!mode.shot.hitRed) mode.shot.cushions++;
       if (!mode.shot.hitRed) { if (hit.nx) mode.shot.ti += Math.sign(mode.shot.udx); if (hit.ny) mode.shot.tj += Math.sign(mode.shot.udy); }
-      mode.marks.push({ x: hit.x, y: hit.y, n: mode.shot.hitRed ? null : mode.shot.cushions }); // 빨간 공을 맞힌 뒤의 튕김은 숫자 없이
+      const sp = b.speed || 1, out = { x: b.vx / sp, y: b.vy / sp }, vn = out.x * hit.nx + out.y * hit.ny;
+      const din = { x: out.x - 2 * vn * hit.nx, y: out.y - 2 * vn * hit.ny }; // 들어온 방향 = 나간 방향을 법선에 대해 되비춘 것
+      mode.marks.push({ x: hit.x, y: hit.y, cx: hit.cx, cy: hit.cy, nx: hit.nx, ny: hit.ny, din, out, n: mode.shot.hitRed ? null : mode.shot.cushions }); // 빨간 공을 맞힌 뒤의 튕김은 숫자 없이
       mode.trail.push({ x: hit.cx, y: hit.cy, k: mode.shot.cushions });
       if (!mode.shot.hitRed) mode.shot.ghostPts.push({ x: imageOf({ x: hit.cx, y: hit.cy }, mode.shot.ti, mode.shot.tj), k: mode.shot.cushions });
       global.App.sound.cushion(b.speed / 420);
@@ -57,11 +59,12 @@
 
     const $ = id => document.getElementById(id);
     mode.el = { tabs: $('rect-tabs'), mirror: $('rect-mirror'), shuffle: $('rect-shuffle'), replay: $('rect-replay'), fire: $('rect-fire'), reaim: $('rect-reaim'),
-      stars: $('rect-stars'), reward: $('rect-reward'), rewardIcon: $('reward-icon'), rewardTitle: $('reward-title'), rewardStars: $('reward-stars'), rewardSub: $('reward-sub'), rewardNext: $('reward-next'), rewardStay: $('reward-stay') };
+      angles: $('rect-angles'), stars: $('rect-stars'), reward: $('rect-reward'), rewardIcon: $('reward-icon'), rewardTitle: $('reward-title'), rewardStars: $('reward-stars'), rewardSub: $('reward-sub'), rewardNext: $('reward-next'), rewardStay: $('reward-stay') };
     mode.el.rewardStay.addEventListener('click', () => { mode.el.reward.classList.remove('active'); if (mode.starCount() === 3) { mode.stars = { 1: false, 2: false, 3: false }; mode.setLevel(1); } });
     mode.el.rewardNext.addEventListener('click', () => { mode.el.reward.classList.remove('active'); mode.rewardNextAction(); });
     mode.el.tabs.querySelectorAll('button').forEach(b => b.addEventListener('click', () => mode.setLevel(b.dataset.level)));
     mode.el.mirror.addEventListener('click', () => mode.setMirror(!mode.mirror));
+    mode.el.angles.addEventListener('click', () => mode.setAngles(!mode.showAngles));
     mode.el.shuffle.addEventListener('click', () => mode.shuffle());
     mode.el.replay.addEventListener('click', () => mode.replay());
     mode.el.fire.addEventListener('click', () => mode.firePredict());
@@ -105,6 +108,12 @@
       const lv = Number(b.dataset.level);
       if (lv) b.textContent = (mode.stars[lv] ? '★ ' : '☆ ') + lv + '쿠션';
     });
+  };
+  mode.setAngles = function (on) {
+    mode.showAngles = on;
+    mode.el.angles.classList.toggle('on', on);
+    mode.el.angles.textContent = on ? '📐 각도 끄기' : '📐 각도 보기';
+    if (on) global.App.msg('📐 쿠션에 들어간 각(주황)과 나온 각(초록)은 항상 같아요. 쳐서 확인해 보세요!');
   };
   mode.setMirror = function (on) {
     mode.mirror = on;
@@ -385,9 +394,14 @@
     }
     for (const m of mode.marks) { R.drawBurst(ctx, m.x, m.y, m.n == null ? 2.5 : 4, m.n == null ? 'rgba(255,224,102,.55)' : '#ffe066'); if (m.n != null) R.drawText(ctx, String(m.n), m.x + (m.x < W / 2 ? 7 : -7), m.y + (m.y < H / 2 ? 7 : -7), 6, '#ffe066'); }
 
+    if (mode.showAngles) for (const m of mode.marks) if (m.din) R.drawAngles(ctx, m.cx, m.cy, m.nx, m.ny, m.din, m.out);
     // 조준선
     if (mode.aim && !world.anyMoving()) {
       const a = global.App.aimDrag(mode.aimStart, mode.aim, W);
+      if (a && mode.showAngles && !(mode.mirror && L)) { // 첫 번째 튕김의 각도를 미리 보여준다
+        const hit = world.castRay(mode.cue, a.dx, a.dy);
+        if (hit && hit.kind === 'wall') { const vn = a.dx * hit.nx + a.dy * hit.ny; R.drawAngles(ctx, hit.x, hit.y, hit.nx, hit.ny, { x: a.dx, y: a.dy }, { x: a.dx - 2 * vn * hit.nx, y: a.dy - 2 * vn * hit.ny }); }
+      }
       if (a) {
         if (mode.mirror && L) {
           // 두 길을 같은 색 구간으로: 진짜 테이블엔 접힌 길, 거울 세계엔 곧은 길

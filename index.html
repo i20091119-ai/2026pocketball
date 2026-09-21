@@ -73,6 +73,7 @@
       </div>
       <div class="actions">
         <button id="rect-mirror">🪞 거울 켜기</button>
+        <button id="rect-angles">📐 각도 보기</button>
         <button id="rect-shuffle">🔀 공 섞기</button>
         <button id="rect-replay">🐢 다시 보기</button>
         <button id="rect-fire" class="primary" hidden>🚀 발사!</button>
@@ -105,6 +106,7 @@
         <button id="ellipse-reset">🎯 공 제자리로</button>
         <button id="ellipse-rays">🌈 모든 경로 보기</button>
         <button id="ellipse-replay">🐢 다시 보기</button>
+        <button id="ellipse-angles">📐 각도 보기</button>
         <label class="slider">○ 동그라미 <input type="range" id="ellipse-shape" min="45" max="96" value="60"> 납작하게 ⬭</label>
       </div>
       <div class="bars" id="ellipse-bars"></div>
@@ -197,7 +199,11 @@
           <li><span>🏆</span><div>점수 모드는 많이 넣은 쪽이, 8볼 모드는 자기 공을 다 넣고 <b>8번을 마지막에</b> 넣는 쪽이 승리!</div></li>
         </ol>
       </div>
-      <button id="help-close" class="primary big">이해했어요! 시작</button>
+      <div class="help-nav">
+        <button id="help-prev" class="big">← 이전</button>
+        <div class="help-dots" id="help-dots"></div>
+        <button id="help-close" class="primary big">다음 →</button>
+      </div>
     </div>
   </div>
 </div>
