@@ -394,13 +394,13 @@
     }
     for (const m of mode.marks) { R.drawBurst(ctx, m.x, m.y, m.n == null ? 2.5 : 4, m.n == null ? 'rgba(255,224,102,.55)' : '#ffe066'); if (m.n != null) R.drawText(ctx, String(m.n), m.x + (m.x < W / 2 ? 7 : -7), m.y + (m.y < H / 2 ? 7 : -7), 6, '#ffe066'); }
 
-    if (mode.showAngles) for (const m of mode.marks) if (m.din) R.drawAngles(ctx, m.cx, m.cy, m.nx, m.ny, m.din, m.out);
+    if (mode.showAngles) { const m = mode.marks[0]; if (m && m.din) R.drawAngles(ctx, m.cx, m.cy, m.nx, m.ny, m.din, m.out, { rim: { x: m.x, y: m.y } }); } // 첫 번째 쿠션만
     // 조준선
     if (mode.aim && !world.anyMoving()) {
       const a = global.App.aimDrag(mode.aimStart, mode.aim, W);
-      if (a && mode.showAngles && !(mode.mirror && L)) { // 첫 번째 튕김의 각도를 미리 보여준다
+      if (a && mode.showAngles && !(mode.mirror && L) && !mode.marks.length) { // 첫 번째 튕김의 각도를 미리 보여준다
         const hit = world.castRay(mode.cue, a.dx, a.dy);
-        if (hit && hit.kind === 'wall') { const vn = a.dx * hit.nx + a.dy * hit.ny; R.drawAngles(ctx, hit.x, hit.y, hit.nx, hit.ny, { x: a.dx, y: a.dy }, { x: a.dx - 2 * vn * hit.nx, y: a.dy - 2 * vn * hit.ny }); }
+        if (hit && hit.kind === 'wall') { const vn = a.dx * hit.nx + a.dy * hit.ny; R.drawAngles(ctx, hit.x, hit.y, hit.nx, hit.ny, { x: a.dx, y: a.dy }, { x: a.dx - 2 * vn * hit.nx, y: a.dy - 2 * vn * hit.ny }, { rim: { x: hit.x - hit.nx * BR, y: hit.y - hit.ny * BR } }); }
       }
       if (a) {
         if (mode.mirror && L) {

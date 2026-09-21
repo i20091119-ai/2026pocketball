@@ -186,15 +186,17 @@
       o.foci.forEach((f, i) => { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(f.x, f.y); ctx.stroke(); });
       ctx.setLineDash([]);
     }
-    // 접선(거울): 곡선에서는 이 선이 거울 역할
+    // 접촉점(벽면 위의 점). 공 중심 경로의 꺾임점(px,py)에서 공 반지름만큼 바깥이다
+    const rx = o.rim ? o.rim.x : px, ry = o.rim ? o.rim.y : py;
+    // 접선(거울): 벽면의 접촉점을 지나는 선. 곡선에서는 이 선이 거울 역할
     if (o.tangent) {
       const T = L * 1.7;
-      ctx.strokeStyle = '#ff9ad5'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px - ny * T, py + nx * T); ctx.lineTo(px + ny * T, py - nx * T); ctx.stroke();
-      label('접선', px + ny * (T + 7), py - nx * (T + 7), '#ffb8e3');
+      ctx.strokeStyle = '#ff9ad5'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(rx - ny * T, ry + nx * T); ctx.lineTo(rx + ny * T, ry - nx * T); ctx.stroke();
+      label('접선', rx + ny * (T + 7), ry - nx * (T + 7), '#ffb8e3');
     }
-    // 법선
+    // 법선: 접촉점에서 안쪽으로, 꺾임점을 지나서
     ctx.setLineDash([2.5, 2]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.1;
-    ctx.beginPath(); ctx.moveTo(px - nx * 4, py - ny * 4); ctx.lineTo(px + nx * L, py + ny * L); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(rx - nx * 2, ry - ny * 2); ctx.lineTo(px + nx * L, py + ny * L); ctx.stroke(); ctx.setLineDash([]);
     if (o.tangent) label('법선', px + nx * (L + 6), py + ny * (L + 6), '#ffffff');
     // 부채꼴 두 개: 법선 → 들어온 쪽, 법선 → 나간 쪽
     const arc = (a1, a2, color) => {
@@ -204,7 +206,13 @@
       return a1 + d / 2;
     };
     const mIn = arc(aN, aIn, 'rgba(247,148,29,1)'), mOut = arc(aN, aOut, 'rgba(141,198,63,1)');
-    const lab = (ang, txt, color) => { const x = px + Math.cos(ang) * (rad + 8), y = py + Math.sin(ang) * (rad + 8); ctx.font = 'bold 6.5px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 2.2; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y); };
+    // 숫자는 법선 좌우로 최소 간격을 두어 각이 작아도 겹치지 않게
+    const lab = (ang, txt, color) => {
+      const side = Math.sign(Math.cos(ang) * -ny + Math.sin(ang) * nx) || 1;
+      const along = rad + 6, lat = Math.max(10, (rad + 8) * Math.abs(Math.sin(ang - aN)));
+      const x = px + nx * along + (-ny) * side * lat, y = py + ny * along + nx * side * lat;
+      ctx.font = 'bold 6.5px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 2.2; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y);
+    };
     lab(mIn, degIn + '°', '#ffd28a'); lab(mOut, degOut + '°', '#c9f28a');
     ctx.restore();
     return { degIn, degOut };
