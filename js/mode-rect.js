@@ -85,6 +85,7 @@
     mode.el.tabs.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.level === String(lv)));
     if (mode.level === 'predict') {
       mode.world.balls = [mode.cue];
+      mode.cue.x = 50; mode.cue.y = 50; // 예측 놀이는 늘 같은 자리에서 시작
       mode.setMirror(false);
       mode.el.mirror.hidden = true; mode.el.shuffle.hidden = true; mode.el.replay.hidden = true;
       mode.startPredict();
