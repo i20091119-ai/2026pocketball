@@ -157,7 +157,7 @@
     mode.rays = { lines, progress: 0, fromFocus: mode.onFocusSnap({ x: ox, y: oy }) };
     mode.trail = []; mode.marks = [];
     global.App.sound.whoosh();
-    global.App.msg('✨ 60방향으로 동시에 쏘면…');
+    global.App.msg('🌈 60방향으로 동시에 쏘면 어디로 갈까요?');
   };
 
   /* ---------- 입력 ---------- */
