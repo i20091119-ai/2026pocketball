@@ -75,7 +75,7 @@
   mode.leave = function () { mode.stopAll(); };
   mode.reset = function () { mode.stars = { 1: false, 2: false, 3: false }; mode.level = 1; mode.mirror = false; };
 
-  mode.stopAll = function () { mode.world.balls.forEach(b => b.stop()); mode.shot = null; mode.aim = null; mode.drag = null; mode.timeScale = 1; };
+  mode.stopAll = function () { mode.world.balls.forEach(b => b.stop()); mode.shot = null; mode.aim = null; mode.aimStart = null; mode.drag = null; mode.picked = null; mode.timeScale = 1; };
 
   mode.setLevel = function (lv) {
     clearTimeout(mode.rewardTimer); // 다른 단계로 넘어가면 예약된 축하 카드는 취소
@@ -201,7 +201,7 @@
     mode.trail = []; mode.marks = [];
     mode.el.fire.hidden = true; mode.el.reaim.hidden = true;
     if (!mode.world.boundary.contains(mode.cue.x, mode.cue.y, BR)) { mode.cue.x = 50; mode.cue.y = 50; }
-    global.App.msg('① 끌어서 공을 칠 방향을 정하세요');
+    global.App.msg('① 새총처럼 당겼다 놓아 방향을 정하세요');
   };
   mode.firePredict = function () {
     const p = mode.predict;
@@ -244,8 +244,8 @@
       if (s !== 'aim') return;
     }
     const b = world.ballAt(p.x, p.y, 1.8);
-    if (b) { mode.drag = { ball: b, offx: b.x - p.x, offy: b.y - p.y }; return; }
-    mode.aim = p; mode.downAt = performance.now();
+    if (b && b !== mode.cue && !mode.picked) { mode.drag = { ball: b, offx: b.x - p.x, offy: b.y - p.y }; return; }
+    mode.pressedBall = b; mode.aimStart = p; mode.aim = p; mode.downAt = performance.now();
   };
   mode.onMove = function (p) {
     if (mode.drag) {
@@ -260,9 +260,14 @@
   mode.onUp = function (p) {
     if (mode.drag) { mode.drag = null; return; }
     if (!mode.aim) return;
-    const a = global.App.aimFrom(mode.cue, p, W);
-    mode.aim = null;
-    if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
+    const a = global.App.aimDrag(mode.aimStart, p, W);
+    const pressed = mode.pressedBall; mode.aim = null; mode.aimStart = null; mode.pressedBall = null;
+    if (!a) { // 톡 누름: 공 집기 / 놓기
+      if (mode.picked) { mode.placePicked(p); return; }
+      if (pressed) { mode.picked = pressed; global.App.msg(`${pressed === mode.cue ? '흰' : '빨간'} 공을 집었어요. 놓을 곳을 누르세요`); global.App.sound.tap(); }
+      return;
+    }
+    if (mode.picked) mode.picked = null;
     if (mode.predict && mode.predict.state === 'aim') {
       mode.predict.dir = { dx: a.dx, dy: a.dy }; mode.lastDir = mode.predict.dir;
       mode.predict.state = 'predict';
@@ -272,6 +277,15 @@
     }
     mode.lastDir = { dx: a.dx, dy: a.dy };
     mode.shoot(a.dx, a.dy, speedFromPower(a.power));
+  };
+
+  mode.placePicked = function (p) {
+    const b = mode.picked, q = mode.world.boundary.clamp(p.x, p.y, BR);
+    if (Math.hypot(q.x - b.x, q.y - b.y) < BR * 1.8) { mode.picked = null; global.App.msg(mode.predict ? '① 새총처럼 당겼다 놓아 방향을 정하세요' : LEVEL_MSG[mode.level]); return; } // 제자리 → 취소
+    if (mode.world.overlapsAny(q.x, q.y, BR, b)) { global.App.msg('거긴 다른 공이 있어요. 다른 곳을 누르세요'); return; }
+    b.x = q.x; b.y = q.y; mode.picked = null; mode.trail = []; mode.marks = [];
+    global.App.sound.tap();
+    global.App.msg(mode.predict ? '① 새총처럼 당겼다 놓아 방향을 정하세요' : LEVEL_MSG[mode.level]);
   };
 
   /* ---------- 업데이트 ---------- */
@@ -373,8 +387,8 @@
 
     // 조준선
     if (mode.aim && !world.anyMoving()) {
-      const a = global.App.aimFrom(mode.cue, mode.aim, W);
-      if (a && a.d >= BR * 1.5) {
+      const a = global.App.aimDrag(mode.aimStart, mode.aim, W);
+      if (a) {
         if (mode.mirror && L) {
           // 두 길을 같은 색 구간으로: 진짜 테이블엔 접힌 길, 거울 세계엔 곧은 길
           const fp = mode.foldedPath(a.dx, a.dy, L);
@@ -419,8 +433,8 @@
     // 큐: 공이 멈춰 있을 때 항상 보인다. 조준 중엔 방향을 따라 돌고 세기만큼 뒤로 당겨진다
     if (!world.anyMoving() && !mode.drag && !(mode.predict && (mode.predict.state === 'shooting' || mode.predict.state === 'result'))) {
       let dir = null, pull = 3 + Math.sin(t * 2.5) * 1.5;
-      const a = mode.aim ? global.App.aimFrom(mode.cue, mode.aim, W) : null;
-      if (a && a.d >= BR * 1.5) { dir = a; pull = 4 + a.power * 16; }
+      const a = mode.aim ? global.App.aimDrag(mode.aimStart, mode.aim, W) : null;
+      if (a) { dir = a; pull = 4 + a.power * 16; }
       else if (mode.predict && mode.predict.dir) dir = mode.predict.dir;
       else if (mode.lastDir) dir = mode.lastDir;
       else if (!mode.predict) { const dx = mode.red.x - mode.cue.x, dy = mode.red.y - mode.cue.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
@@ -440,7 +454,8 @@
       R.drawBall(ctx, { x: g.x, y: g.y, r: BR, color: '#ffffff', number: null });
       ctx.restore();
     }
-    for (const b of world.balls) R.drawBall(ctx, b);
+    for (const b of world.balls) R.drawBall(ctx, b, { glow: b === mode.picked ? 'rgba(255,255,255,.95)' : null });
+    if (mode.picked) { ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.setLineDash([2, 2]); ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(mode.picked.x, mode.picked.y, BR * 2 + Math.sin(t * 5), 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
     if (mode.confetti) {
       const c = mode.confetti; ctx.save(); ctx.globalAlpha = Math.max(0, 1 - (c.t - 1.4) / 1);
       for (const p of c.parts) { ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); ctx.restore(); }

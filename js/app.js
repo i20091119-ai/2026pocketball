@@ -132,12 +132,14 @@
     requestAnimationFrame(frame);
   };
 
-  /* 조준 도우미: 공에서 터치 지점 방향으로, 거리에 따라 세기 */
-  App.aimFrom = function (ball, p, tableW) {
-    const dx = p.x - ball.x, dy = p.y - ball.y;
+  /* 새총 조준: 누른 곳(start)에서 당긴 곳(end)의 반대 방향으로 발사, 당긴 거리만큼 세게 */
+  App.TAP_DIST = 6; // 이보다 짧게 움직이면 '톡 누름'으로 본다
+  App.aimDrag = function (start, end, tableW) {
+    if (!start || !end) return null;
+    const dx = start.x - end.x, dy = start.y - end.y;
     const d = Math.hypot(dx, dy);
-    if (d < 1e-6) return null;
-    const power = Math.max(0, Math.min(1, (d - ball.r * 2) / (tableW * 0.55)));
+    if (d < App.TAP_DIST) return null;
+    const power = Math.max(0, Math.min(1, (d - App.TAP_DIST) / (tableW * 0.42)));
     return { dx: dx / d, dy: dy / d, power, d };
   };
 

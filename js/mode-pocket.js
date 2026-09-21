@@ -86,7 +86,7 @@
     mode.setAimLine(o.mode === 'score');
     mode.buildBalls();
     mode.updateHud();
-    global.App.msg(`${P_NAME[mode.turn]}, 흰 공을 끌어서 쳐 보세요!`);
+    global.App.msg(`${P_NAME[mode.turn]}, 새총처럼 당겼다 놓아 쳐 보세요!`);
   };
   mode.buildBalls = function () {
     const o = mode.opts;
@@ -201,7 +201,7 @@
   mode.onDown = function (p) {
     if (mode.phase !== 'play' || mode.world.anyMoving()) return;
     if (mode.ballInHand && Math.hypot(p.x - mode.cue.x, p.y - mode.cue.y) < BR * 2.2) { mode.drag = { offx: mode.cue.x - p.x, offy: mode.cue.y - p.y }; return; }
-    mode.aim = p; mode.downAt = performance.now();
+    mode.aimStart = p; mode.aim = p; mode.downAt = performance.now();
   };
   mode.onMove = function (p) {
     if (mode.drag) {
@@ -214,9 +214,9 @@
   mode.onUp = function (p) {
     if (mode.drag) { mode.drag = null; return; }
     if (!mode.aim) return;
-    const a = global.App.aimFrom(mode.cue, p, W);
-    mode.aim = null;
-    if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
+    const a = global.App.aimDrag(mode.aimStart, p, W);
+    mode.aim = null; mode.aimStart = null;
+    if (!a) return;
     mode.lastDir = { dx: a.dx, dy: a.dy };
     mode.cue.vx = a.dx * speedFromPower(a.power); mode.cue.vy = a.dy * speedFromPower(a.power);
     global.App.sound.shoot(a.power);
@@ -266,8 +266,8 @@
     R.drawRectTable(ctx, W, H, { cloth: '#2c8a4a', pockets: world.pockets });
     // 조준선
     if (mode.aim && !world.anyMoving() && mode.phase === 'play') {
-      const a = global.App.aimFrom(mode.cue, mode.aim, W);
-      if (a && a.d >= BR * 1.5) {
+      const a = global.App.aimDrag(mode.aimStart, mode.aim, W);
+      if (a) {
         if (mode.aimLine) {
           const hit = world.castRay(mode.cue, a.dx, a.dy);
           R.drawAimLine(ctx, mode.cue, a.dx, a.dy, hit);
@@ -290,8 +290,8 @@
     }
     if (mode.phase === 'play' && !world.anyMoving() && !mode.drag && !mode.cue.pocketed) {
       let dir = null, pull = 3 + Math.sin(t * 2.5) * 1.5;
-      const a = mode.aim ? global.App.aimFrom(mode.cue, mode.aim, W) : null;
-      if (a && a.d >= BR * 1.5) { dir = a; pull = 4 + a.power * 16; }
+      const a = mode.aim ? global.App.aimDrag(mode.aimStart, mode.aim, W) : null;
+      if (a) { dir = a; pull = 4 + a.power * 16; }
       else if (mode.lastDir) dir = mode.lastDir;
       else { const dx = 150 - mode.cue.x, dy = 50 - mode.cue.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
       R.drawCue(ctx, mode.cue.x, mode.cue.y, dir.dx, dir.dy, pull, BR);

@@ -52,8 +52,8 @@
     mode.placeOnFoci();
   };
 
-  mode.enter = function () { mode.timeScale = 1; mode.rays = null; global.App.msg('노란 공을 아무 방향으로나 쳐 보세요. 빨간 공에 맞을까요?'); };
-  mode.leave = function () { mode.world.balls.forEach(b => b.stop()); mode.shot = null; mode.aim = null; mode.drag = null; mode.timeScale = 1; };
+  mode.enter = function () { mode.timeScale = 1; mode.rays = null; global.App.msg('새총처럼 당겼다 놓아 노란 공을 아무 방향으로나 쳐 보세요. 빨간 공에 맞을까요?'); };
+  mode.leave = function () { mode.world.balls.forEach(b => b.stop()); mode.shot = null; mode.aim = null; mode.aimStart = null; mode.drag = null; mode.picked = null; mode.timeScale = 1; };
   mode.reset = function () { mode.history = []; mode.renderBars(); mode.oldTrails = []; mode.setShape(60); mode.el.shape.value = 60; mode.placeOnFoci(); };
 
   mode.placeOnFoci = function () {
@@ -164,8 +164,8 @@
   mode.onDown = function (p) {
     if (mode.world.anyMoving()) return;
     const b = mode.world.ballAt(p.x, p.y, 1.8);
-    if (b) { mode.drag = { ball: b, offx: b.x - p.x, offy: b.y - p.y }; return; }
-    mode.aim = p; mode.downAt = performance.now();
+    if (b && b !== mode.yellow && !mode.picked) { mode.drag = { ball: b, offx: b.x - p.x, offy: b.y - p.y }; return; }
+    mode.pressedBall = b; mode.aimStart = p; mode.aim = p; mode.downAt = performance.now();
   };
   mode.onMove = function (p) {
     if (mode.drag) {
@@ -187,11 +187,27 @@
       return;
     }
     if (!mode.aim) return;
-    const a = global.App.aimFrom(mode.yellow, p, 2 * A);
-    mode.aim = null;
-    if (!a || a.d < BR * 1.5 || performance.now() - mode.downAt < 80) return;
+    const a = global.App.aimDrag(mode.aimStart, p, 2 * A);
+    const pressed = mode.pressedBall; mode.aim = null; mode.aimStart = null; mode.pressedBall = null;
+    if (!a) {
+      if (mode.picked) { mode.placePicked(p); return; }
+      if (pressed) { mode.picked = pressed; global.App.msg(`${pressed === mode.yellow ? '노란' : '빨간'} 공을 집었어요. 놓을 곳을 누르세요 (마법의 점 근처면 딱 붙어요)`); global.App.sound.tap(); }
+      return;
+    }
+    if (mode.picked) mode.picked = null;
     mode.lastDir = { dx: a.dx, dy: a.dy };
     mode.shoot(a.dx, a.dy, Math.max(200, speedFromPower(a.power)));
+  };
+
+  mode.placePicked = function (p) {
+    const b = mode.picked;
+    let q = mode.world.boundary.clamp(p.x, p.y);
+    for (const f of mode.world.boundary.foci()) if (Math.hypot(q.x - f.x, q.y - f.y) < SNAP) q = { x: f.x, y: f.y };
+    if (Math.hypot(q.x - b.x, q.y - b.y) < BR * 1.8) { mode.picked = null; global.App.msg('그대로 두었어요'); return; }
+    if (mode.world.overlapsAny(q.x, q.y, BR, b)) { global.App.msg('거긴 다른 공이 있어요. 다른 곳을 누르세요'); return; }
+    b.x = q.x; b.y = q.y; mode.picked = null; mode.trail = []; mode.marks = []; mode.rays = null;
+    if (mode.onFocus(b) !== null) { global.App.sound.snap(); global.App.msg(b === mode.yellow ? '노란 공이 마법의 점 위에 올라갔어요 ✨' : '빨간 공이 마법의 점 위에 올라갔어요 ✨'); }
+    else { global.App.sound.tap(); global.App.msg(b === mode.yellow ? '마법의 점이 아닌 곳이에요. 여기서 치면 어떻게 될까요?' : '빨간 공이 마법의 점을 벗어났어요'); }
   };
 
   /* ---------- 업데이트 ---------- */
@@ -256,20 +272,21 @@
     for (const m of mode.marks) R.drawBurst(ctx, m.x, m.y, 4, '#ffe066');
     // 조준선
     if (mode.aim && !world.anyMoving()) {
-      const a = global.App.aimFrom(mode.yellow, mode.aim, 2 * A);
-      if (a && a.d >= BR * 1.5) {
+      const a = global.App.aimDrag(mode.aimStart, mode.aim, 2 * A);
+      if (a) {
         R.drawAimLine(ctx, mode.yellow, a.dx, a.dy, world.castRay(mode.yellow, a.dx, a.dy));
       }
     }
     if (!world.anyMoving() && !mode.drag && !(mode.rays && mode.rays.progress < 1)) {
       let dir = null, pull = 3 + Math.sin(t * 2.5) * 1.5;
-      const a = mode.aim ? global.App.aimFrom(mode.yellow, mode.aim, 2 * A) : null;
-      if (a && a.d >= BR * 1.5) { dir = a; pull = 4 + a.power * 16; }
+      const a = mode.aim ? global.App.aimDrag(mode.aimStart, mode.aim, 2 * A) : null;
+      if (a) { dir = a; pull = 4 + a.power * 16; }
       else if (mode.lastDir) dir = mode.lastDir;
       else { const dx = mode.red.x - mode.yellow.x, dy = mode.red.y - mode.yellow.y, l = Math.hypot(dx, dy) || 1; dir = { dx: dx / l, dy: dy / l }; }
       R.drawCue(ctx, mode.yellow.x, mode.yellow.y, dir.dx, dir.dy, pull, BR);
     }
-    for (const b of world.balls) R.drawBall(ctx, b, { glow: mode.onFocus(b) !== null ? 'rgba(255,230,120,.9)' : null });
+    for (const b of world.balls) R.drawBall(ctx, b, { glow: b === mode.picked ? 'rgba(255,255,255,.95)' : (mode.onFocus(b) !== null ? 'rgba(255,230,120,.9)' : null) });
+    if (mode.picked) { ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.setLineDash([2, 2]); ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(mode.picked.x, mode.picked.y, BR * 2 + Math.sin(t * 5), 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
   };
 
   global.App.modes.ellipse = mode;
