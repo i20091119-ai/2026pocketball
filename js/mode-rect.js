@@ -341,8 +341,8 @@
         const n = Math.abs(i) + Math.abs(j);
         if (n === 0 || n > L) continue;
         ctx.save();
-        ctx.globalAlpha = n === L ? 0.5 : 0.28;
-        ctx.fillStyle = '#3a7a55';
+        ctx.globalAlpha = n === L ? 0.7 : 0.42;
+        ctx.fillStyle = '#3a8a5a';
         ctx.fillRect(BR + i * w, BR + j * h, w, h);
         ctx.globalAlpha = 0.9; ctx.strokeStyle = '#b98a55'; ctx.lineWidth = 1.6;
         ctx.strokeRect(BR + i * w, BR + j * h, w, h);
@@ -384,7 +384,7 @@
             ctx.beginPath(); ctx.moveTo(s.x0, s.y0); ctx.lineTo(s.x1, s.y1); ctx.stroke();                     // 접힌 길
             ctx.beginPath(); ctx.moveTo(sx, sy); sx += a.dx * len; sy += a.dy * len; ctx.lineTo(sx, sy); ctx.stroke(); // 곧은 길
           }
-          if (!fp.hitRed) { ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + a.dx * W, sy + a.dy * W); ctx.stroke(); }
+          if (!fp.hitRed) { ctx.strokeStyle = 'rgba(34,48,71,.35)'; ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + a.dx * W, sy + a.dy * W); ctx.stroke(); }
           ctx.setLineDash([]);
           if (fp.hitRed) { ctx.beginPath(); ctx.arc(sx, sy, BR, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fill(); }
           ctx.restore();

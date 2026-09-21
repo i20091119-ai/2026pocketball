@@ -3,9 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#10161c">
-<title>대칭으로 보는 당구 — 2026 포켓볼</title>
+<meta name="theme-color" content="#fbf9f4">
+<title>대칭으로 보는 당구 — 경남수학문화관</title>
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -14,13 +17,43 @@
 
   <!-- 홈 -->
   <section class="screen" id="screen-home">
+    <div class="deco" aria-hidden="true">
+      <svg class="d d1" viewBox="0 0 100 100"><polygon points="50,8 95,88 5,88" fill="#e2231a"/></svg>
+      <svg class="d d2" viewBox="0 0 100 100"><rect x="14" y="14" width="72" height="72" rx="6" fill="#f7941d" transform="rotate(12 50 50)"/></svg>
+      <svg class="d d3" viewBox="0 0 100 100"><polygon points="50,6 94,38 77,90 23,90 6,38" fill="#8dc63f"/></svg>
+      <svg class="d d4" viewBox="0 0 100 100"><polygon points="50,6 88,28 88,72 50,94 12,72 12,28" fill="#0a8fd8"/></svg>
+      <svg class="d d5" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="#8e44ad"/></svg>
+    </div>
     <div class="home-inner">
-      <p class="eyebrow">경남수학문화관 체험교구</p>
-      <h1>대칭으로 보는 당구</h1>
+      <div class="logo-wrap">
+        <img class="logo" src="assets/gnmc-logo.png" alt="경남수학문화관" onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+        <svg class="logo-fallback" hidden viewBox="0 0 660 120" role="img" aria-label="경남수학문화관">
+          <polygon points="18,44 84,26 62,92" fill="#e2231a"/>
+          <rect x="82" y="22" width="48" height="48" rx="4" fill="#f7941d" transform="rotate(14 106 46)"/>
+          <polygon points="160,6 190,28 179,64 141,64 130,28" fill="#8dc63f"/>
+          <polygon points="222,20 244,32 244,58 222,70 200,58 200,32" fill="#0a8fd8"/>
+          <circle cx="272" cy="60" r="16" fill="#8e44ad"/><circle cx="272" cy="60" r="7" fill="#fff"/>
+          <text x="66" y="112" font-family="Jua, sans-serif" font-size="34" fill="#223047">GNMC</text>
+          <text x="300" y="58" font-family="Jua, sans-serif" font-size="44" fill="#223047">경남수학문화관</text>
+          <text x="302" y="90" font-family="Gowun Dodum, sans-serif" font-size="17" fill="#5b6b85">Gyeongnam Mathematics Culture Center</text>
+        </svg>
+      </div>
+      <p class="eyebrow">체험전시교구 · 공간좌표 탐험대</p>
+      <h1 class="title"><span class="rainbow">대칭</span>으로 보는 당구</h1>
+      <p class="tagline">대칭의 원리를 이용해 당구공의 움직임을 예측해 보아요!</p>
       <div class="menu">
-        <button class="card" data-go="rect"><span class="icon">▭</span><b>네모 당구대 미션</b><small>거울처럼 튀는 공, 대칭으로 맞혀요</small></button>
-        <button class="card" data-go="ellipse"><span class="icon">⬭</span><b>타원 당구대 마법</b><small>마법의 점에서 치면 무조건 맞아요</small></button>
-        <button class="card" data-go="pocket"><span class="icon">🎱</span><b>포켓볼 대결</b><small>친구와 번갈아 치는 포켓볼</small></button>
+        <button class="card c-green" data-go="rect">
+          <svg class="icon" viewBox="0 0 120 70"><rect x="4" y="4" width="112" height="62" rx="10" fill="#b8763f"/><rect x="14" y="14" width="92" height="42" rx="3" fill="#2c8a4a"/><path d="M34 46 L60 22 L86 46" stroke="#fff" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/><circle cx="34" cy="46" r="6" fill="#fff"/><circle cx="86" cy="46" r="6" fill="#e0362c"/></svg>
+          <b>네모 당구대 미션</b><small>거울처럼 튀는 공, 대칭으로 맞혀요</small>
+        </button>
+        <button class="card c-blue" data-go="ellipse">
+          <svg class="icon" viewBox="0 0 120 70"><ellipse cx="60" cy="35" rx="56" ry="31" fill="#b8763f"/><ellipse cx="60" cy="35" rx="46" ry="23" fill="#2453d6"/><path d="M38 35 L64 16 L82 35" stroke="#fff" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/><circle cx="38" cy="35" r="6" fill="#f5c518"/><circle cx="82" cy="35" r="6" fill="#e0362c"/></svg>
+          <b>타원 당구대 마법</b><small>마법의 점에서 치면 무조건 맞아요</small>
+        </button>
+        <button class="card c-purple" data-go="pocket">
+          <svg class="icon" viewBox="0 0 120 70"><rect x="4" y="4" width="112" height="62" rx="10" fill="#b8763f"/><rect x="14" y="14" width="92" height="42" rx="3" fill="#2c8a4a"/><circle cx="14" cy="14" r="6" fill="#111"/><circle cx="106" cy="14" r="6" fill="#111"/><circle cx="14" cy="56" r="6" fill="#111"/><circle cx="106" cy="56" r="6" fill="#111"/><circle cx="40" cy="35" r="6" fill="#fff"/><circle cx="76" cy="30" r="6" fill="#1b1b1b"/><circle cx="76" cy="30" r="3" fill="#fff"/><circle cx="84" cy="41" r="6" fill="#f5c518"/><circle cx="70" cy="42" r="6" fill="#1f5fd6"/></svg>
+          <b>포켓볼 대결</b><small>친구와 번갈아 치는 포켓볼</small>
+        </button>
       </div>
       <button id="btn-sound" class="ghost">🔊 소리 켜짐</button>
     </div>
