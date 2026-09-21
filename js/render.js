@@ -179,11 +179,23 @@
     const degIn = Math.round(Math.acos(Math.max(-1, Math.min(1, -din.x * nx - din.y * ny))) * 180 / Math.PI);
     const degOut = Math.round(Math.acos(Math.max(-1, Math.min(1, dout.x * nx + dout.y * ny))) * 180 / Math.PI);
     ctx.save(); ctx.lineCap = 'round';
-    // 접선(거울)
-    if (o.tangent) { ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px - ny * L, py + nx * L); ctx.lineTo(px + ny * L, py - nx * L); ctx.stroke(); }
+    const label = (txt, x, y, color, size) => { ctx.font = `bold ${size || 5.5}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,.6)'; ctx.strokeText(txt, x, y); ctx.fillStyle = color; ctx.fillText(txt, x, y); };
+    // 두 초점으로 가는 보조선: 법선이 ∠F₁PF₂를 반으로 나눈다
+    if (o.foci) {
+      ctx.setLineDash([1.5, 2.5]); ctx.strokeStyle = 'rgba(140,220,255,.9)'; ctx.lineWidth = 0.9;
+      o.foci.forEach((f, i) => { ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(f.x, f.y); ctx.stroke(); });
+      ctx.setLineDash([]);
+    }
+    // 접선(거울): 곡선에서는 이 선이 거울 역할
+    if (o.tangent) {
+      const T = L * 1.7;
+      ctx.strokeStyle = '#ff9ad5'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px - ny * T, py + nx * T); ctx.lineTo(px + ny * T, py - nx * T); ctx.stroke();
+      label('접선', px + ny * (T + 7), py - nx * (T + 7), '#ffb8e3');
+    }
     // 법선
-    ctx.setLineDash([2.5, 2]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1;
+    ctx.setLineDash([2.5, 2]); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.1;
     ctx.beginPath(); ctx.moveTo(px - nx * 4, py - ny * 4); ctx.lineTo(px + nx * L, py + ny * L); ctx.stroke(); ctx.setLineDash([]);
+    if (o.tangent) label('법선', px + nx * (L + 6), py + ny * (L + 6), '#ffffff');
     // 부채꼴 두 개: 법선 → 들어온 쪽, 법선 → 나간 쪽
     const arc = (a1, a2, color) => {
       let d = a2 - a1; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;

@@ -47,7 +47,7 @@
 
     const $ = id => document.getElementById(id);
     mode.el = { reset: $('ellipse-reset'), rays: $('ellipse-rays'), replay: $('ellipse-replay'), shape: $('ellipse-shape'), bars: $('ellipse-bars'), angles: $('ellipse-angles') };
-    mode.el.angles.addEventListener('click', () => { mode.showAngles = !mode.showAngles; mode.el.angles.classList.toggle('on', mode.showAngles); mode.el.angles.textContent = mode.showAngles ? '📐 각도 끄기' : '📐 각도 보기'; if (mode.showAngles) global.App.msg('📐 곡선에서도 거울(접선) 기준으로 들어간 각(주황)과 나온 각(초록)이 같아요'); });
+    mode.el.angles.addEventListener('click', () => { mode.showAngles = !mode.showAngles; mode.el.angles.classList.toggle('on', mode.showAngles); mode.el.angles.textContent = mode.showAngles ? '📐 각도 끄기' : '📐 각도 보기'; if (mode.showAngles) global.App.msg('📐 닿은 점의 접선이 거울이에요. 법선이 두 각을 반으로 나누고, 두 초점을 잇는 각도 반으로 나눠요'); });
     mode.el.reset.addEventListener('click', () => mode.placeOnFoci());
     mode.el.rays.addEventListener('click', () => mode.startRays());
     mode.el.replay.addEventListener('click', () => mode.replay());
@@ -273,13 +273,13 @@
     for (const tr of mode.oldTrails) R.drawTrail(ctx, tr, 'rgba(255,255,255,.28)', 0.9);
     R.drawTrail(ctx, mode.trail, 'rgba(255,255,255,.9)', 1.2);
     for (const m of mode.marks) R.drawBurst(ctx, m.x, m.y, 4, '#ffe066');
-    if (mode.showAngles) for (const m of mode.marks) if (m.din) R.drawAngles(ctx, m.cx, m.cy, m.nx, m.ny, m.din, m.out, { tangent: true });
+    if (mode.showAngles) for (const m of mode.marks) if (m.din) R.drawAngles(ctx, m.cx, m.cy, m.nx, m.ny, m.din, m.out, { tangent: true, foci: bd.foci() });
     // 조준선
     if (mode.aim && !world.anyMoving()) {
       const a = global.App.aimDrag(mode.aimStart, mode.aim, 2 * A);
       if (a && mode.showAngles) {
         const hit = world.castRay(mode.yellow, a.dx, a.dy);
-        if (hit && hit.kind === 'wall') { const vn = a.dx * hit.nx + a.dy * hit.ny; R.drawAngles(ctx, hit.x, hit.y, hit.nx, hit.ny, { x: a.dx, y: a.dy }, { x: a.dx - 2 * vn * hit.nx, y: a.dy - 2 * vn * hit.ny }, { tangent: true }); }
+        if (hit && hit.kind === 'wall') { const vn = a.dx * hit.nx + a.dy * hit.ny; R.drawAngles(ctx, hit.x, hit.y, hit.nx, hit.ny, { x: a.dx, y: a.dy }, { x: a.dx - 2 * vn * hit.nx, y: a.dy - 2 * vn * hit.ny }, { tangent: true, foci: bd.foci() }); }
       }
       if (a) {
         R.drawAimLine(ctx, mode.yellow, a.dx, a.dy, world.castRay(mode.yellow, a.dx, a.dy));
