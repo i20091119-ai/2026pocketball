@@ -38,6 +38,23 @@
 
 업데이트는 새 ZIP을 받아 폴더를 통째로 바꾸면 됩니다.
 
+## 윈도우 실행파일(exe)
+
+브라우저 설치와 상관없이 더블클릭 하나로 전체화면 전시가 뜨는 Electron 앱입니다.
+
+- **내려받기**: 저장소 **Releases** 페이지 → 최신 버전의
+  - `대칭으로보는당구-<버전>-portable.exe` — 설치 없이 실행(첫 실행은 압축 해제로 몇 초 걸림)
+  - `대칭으로보는당구-<버전>-win-x64.zip` — 압축을 풀고 폴더 안의 `대칭으로보는당구.exe` 실행(매번 즉시 시작, 전시용 권장)
+- **종료**: 홈 버튼(홈 화면에서는 로고) 3초 길게 누르기 → ⏻ 전시 종료. 키보드가 있으면 Alt+F4.
+- 일반 창으로 열어 점검하려면: `대칭으로보는당구.exe --window`
+
+### 새 버전 만들기
+`v1.0.1`처럼 `v`로 시작하는 태그를 푸시하면 GitHub Actions(`.github/workflows/build-windows.yml`)가
+윈도우 머신에서 빌드해 Releases에 자동으로 올립니다. Actions 탭에서 "Build Windows exe"를 수동 실행(Run workflow)하면
+Releases 없이 빌드 결과물(Artifacts)만 받을 수도 있습니다.
+
+개발 PC에서 직접: `npm install` 후 `npm start`(일반 창) / `npm run start:kiosk`(전체화면) / `npm run dist`(윈도우에서 exe 빌드).
+
 ## 웹 배포 (GitHub Pages)
 
 저장소의 **기본 브랜치에 푸시하면 GitHub Pages가 자동으로 배포**합니다 (Settings → Pages, "Deploy from a branch").
@@ -61,6 +78,8 @@
 
 ```
 index.html          화면(홈·세 모드)과 스크립트 로드
+electron/main.js    윈도우 실행파일(Electron) 진입점
+package.json        Electron·electron-builder 설정
 css/style.css
 js/physics.js       공·쿠션(사각/타원)·포켓 물리 — 세 모드 공유
 js/render.js        캔버스 그리기 도우미
