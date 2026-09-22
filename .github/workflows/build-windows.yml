@@ -3,6 +3,8 @@ name: Build Windows exe
 on:
   push:
     tags: ['v*']
+    branches: [main]
+    paths: ['package.json']   # main에서 버전(package.json)이 바뀌면 자동 빌드·릴리스
   workflow_dispatch:
     inputs:
       release:
@@ -37,7 +39,7 @@ jobs:
             dist/*.exe
             dist/*.zip
       - name: Release
-        if: startsWith(github.ref, 'refs/tags/v') || inputs.release
+        if: github.event_name == 'push' || inputs.release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.v.outputs.version }}

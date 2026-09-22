@@ -4,6 +4,7 @@
   "description": "경남수학문화관 체험교구 — 대칭으로 보는 당구 (윈도우 전시용 실행파일)",
   "main": "electron/main.js",
   "private": true,
+  "homepage": "https://github.com/i20091119-ai/2026pocketball",
   "license": "MIT",
   "scripts": {
     "start": "electron . --window",

@@ -49,8 +49,8 @@
 - 일반 창으로 열어 점검하려면: `대칭으로보는당구.exe --window`
 
 ### 새 버전 만들기
-`v1.0.1`처럼 `v`로 시작하는 태그를 푸시하면 GitHub Actions(`.github/workflows/build-windows.yml`)가
-윈도우 머신에서 빌드해 Releases에 자동으로 올립니다. Actions 탭에서 "Build Windows exe"를 수동 실행(Run workflow)하면
+`package.json`의 `version`을 올려(예: 1.0.1) `main`에 푸시하면 GitHub Actions(`.github/workflows/build-windows.yml`)가
+윈도우 머신에서 빌드해 Releases에 `v1.0.1`로 자동으로 올립니다. `v`로 시작하는 태그를 푸시해도 됩니다. Actions 탭에서 "Build Windows exe"를 수동 실행(Run workflow)하면
 Releases 없이 빌드 결과물(Artifacts)만 받을 수도 있습니다.
 
 개발 PC에서 직접: `npm install` 후 `npm start`(일반 창) / `npm run start:kiosk`(전체화면) / `npm run dist`(윈도우에서 exe 빌드).
