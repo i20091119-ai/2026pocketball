@@ -1,6 +1,6 @@
 {
   "name": "gnmc-billiards",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "경남수학문화관 체험교구 — 대칭으로 보는 당구 (윈도우 전시용 실행파일)",
   "main": "electron/main.js",
   "private": true,
@@ -18,7 +18,7 @@
   "build": {
     "appId": "kr.gnmc.billiards",
     "productName": "대칭으로보는당구",
-    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "artifactName": "gnmc-billiards-${version}-${os}-${arch}.${ext}",
     "directories": { "output": "dist", "buildResources": "build" },
     "files": [
       "index.html", "manifest.webmanifest",
@@ -28,6 +28,6 @@
       "target": ["portable", "zip"],
       "icon": "build/icon.png"
     },
-    "portable": { "artifactName": "${productName}-${version}-portable.exe" }
+    "portable": { "artifactName": "gnmc-billiards-${version}-portable.exe" }
   }
 }
